@@ -8,7 +8,7 @@ export const verifyToken = async (
   next: NextFunction,
 ) => {
   const { url, method } = req;
-
+  // el manejo de las rutas publicas puede hacerse mejor pero por ahora se quedara asi
   const isPublicRoute = publicRoutes.some(
     (r) =>
       r.route.toLowerCase() === url.toLowerCase() &&
