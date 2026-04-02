@@ -67,7 +67,7 @@ CREATE TABLE public.products_stock (
 );
 
 CREATE TABLE public.products_units (
-    correlative integer NOT NULL,
+    correlative SERIAL PRIMARY KEY,
     unit character varying,
     product_code character varying,
     main_unit boolean,

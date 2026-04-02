@@ -3,6 +3,7 @@ import { env } from "@/config/env";
 import AppRoute from "@/app.route";
 import AuthRoute from "@/auth/auth.route";
 import ProductsRoute from "@/products/products.route";
+import ProductsUnitsRoute from "@/products_units/products_units.route";
 import { verifyToken } from "@/auth/auth.middleware";
 
 const logger = (req: Request, _: Response, next: NextFunction) => {
@@ -19,7 +20,7 @@ const boostrap = () => {
   app.use(logger);
   app.use(verifyToken);
 
-  app.use("/api", [AppRoute, AuthRoute, ProductsRoute]);
+  app.use("/api", [AppRoute, AuthRoute, ProductsRoute, ProductsUnitsRoute]);
 
   app.listen(PORT, () => {
     console.log("Listen on http://" + HOST + ":" + PORT);

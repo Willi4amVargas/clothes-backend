@@ -1,8 +1,9 @@
+import { CreateProductUnitDto } from "@/products_units/dto/create-product-unit.dto";
 import z from "zod";
 
 export const CreateProductDto = z.object({
-  code: z.string(),
-  description: z.string().max(255),
+  code: z.string().min(2),
+  description: z.string().min(2).max(255),
   short_name: z.string().max(100),
   mark: z.string().max(100),
   model: z.string().max(100),
@@ -12,4 +13,5 @@ export const CreateProductDto = z.object({
   origin: z.string().max(100),
   buy_tax: z.number().min(0),
   sale_tax: z.number().min(0),
+  products_units: z.array(CreateProductUnitDto).min(1),
 });

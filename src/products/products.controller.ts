@@ -2,9 +2,15 @@ import { Request, Response } from "express";
 import { ProductsService } from "@/products/products.service";
 import { CreateProductDto } from "@/products/dto/create-product.dto";
 import { UpdateProductDto } from "@/products/dto/update-product.dto";
+import { ProductsUnitsService } from "@/products_units/products_units.service";
+import { ProductsStockService } from "@/products_stock/products_stock.service";
 
 export class ProductsController {
-  constructor(private productsService: ProductsService) {}
+  constructor(
+    private productsService: ProductsService,
+    private productsUnitsService: ProductsUnitsService,
+    private productsStockService: ProductsStockService,
+  ) {}
 
   getAll = async (_: Request, res: Response) => {
     try {
@@ -30,7 +36,16 @@ export class ProductsController {
       if (!product) {
         return res.status(404).json({ message: "Product not found" });
       }
-      res.json(product);
+      const units = await this.productsUnitsService.getAll(code);
+      const stock = await this.productsStockService.getAll(code);
+
+      const result = {
+        ...product,
+        units,
+        stock,
+      };
+
+      res.json(result);
     } catch (error: any) {
       if (error.message) {
         return res.status(500).json({ message: error.message });
@@ -51,7 +66,20 @@ export class ProductsController {
 
     try {
       const newProduct = await this.productsService.create(product);
-      res.status(201).json(newProduct);
+      const units = await Promise.all(
+        product.products_units.map((unit) =>
+          this.productsUnitsService.create(newProduct.code, unit),
+        ),
+      );
+      const stock = await Promise.all(
+        units.map((unit) =>
+          this.productsStockService.create(newProduct.code, unit.correlative, {
+            stock: 0,
+          }),
+        ),
+      );
+      const result = { ...newProduct, units, stock };
+      res.status(201).json(result);
     } catch (error: any) {
       if (error.message) {
         return res.status(400).json({ message: error.message });
@@ -78,7 +106,21 @@ export class ProductsController {
 
     try {
       const updatedProduct = await this.productsService.update(code, product);
-      res.json(updatedProduct);
+      let updatedProductUnits = null;
+
+      if (product.products_units) {
+        updatedProductUnits = await Promise.all(
+          product.products_units.map((unit) =>
+            this.productsUnitsService.update(
+              updatedProduct.code,
+              unit.correlative,
+              unit,
+            ),
+          ),
+        );
+      }
+      const result = { ...updatedProduct, products_units: updatedProductUnits };
+      res.status(201).json(result);
     } catch (error: any) {
       if (error.message) {
         res.status(400).json({ message: error.message });
