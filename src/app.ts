@@ -4,6 +4,7 @@ import AppRoute from "@/app.route";
 import AuthRoute from "@/auth/auth.route";
 import ProductsRoute from "@/products/products.route";
 import ProductsUnitsRoute from "@/products_units/products_units.route";
+import SwaggerRoute from "@/swagger/swagger.route";
 import { verifyToken } from "@/auth/auth.middleware";
 
 const logger = (req: Request, _: Response, next: NextFunction) => {
@@ -18,6 +19,9 @@ const boostrap = () => {
   const app = express();
   app.use(express.json());
   app.use(logger);
+
+  app.use("/api", SwaggerRoute);
+
   app.use(verifyToken);
 
   app.use("/api", [AppRoute, AuthRoute, ProductsRoute, ProductsUnitsRoute]);
