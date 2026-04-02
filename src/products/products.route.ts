@@ -135,6 +135,8 @@ const route = Router();
  *                items:
  *                  type: object
  *                  properties:
+ *                    correlative:
+ *                      type: number
  *                    unit:
  *                      type: string
  *                    main_unit:
@@ -143,6 +145,8 @@ const route = Router();
  *                      type: number
  *                    price:
  *                      type: number
+ *           required:
+ *            - products_units.correlative
  *     responses:
  *       200:
  *         description: Retorna el producto actualizado
