@@ -30,7 +30,6 @@ export class InventoryOperationController {
 
   getOne = async (req: Request, res: Response) => {
     const { correlative } = req.params;
-    console.log("is here");
     if (!correlative || typeof correlative !== "string") {
       res.status(400).json({ message: "Invalid correlative number" });
       return;
@@ -56,7 +55,7 @@ export class InventoryOperationController {
       }
 
       const inventoryOperationDetails =
-        this.inventoryOperationDetailsService.getAll(+correlative);
+        await this.inventoryOperationDetailsService.getAll(+correlative);
       const result = {
         ...inventoryOperation,
         inventory_operation_details: inventoryOperationDetails,

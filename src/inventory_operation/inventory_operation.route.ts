@@ -15,6 +15,48 @@ const route = Router();
  *         description: Devuelve un listado de las operaciones de inventario en la base de datos
  *     security:
  *       - bearerAuth: []
+ *   post:
+ *     description: Crea una operacion de inventario puede ser "LOAD" o "DOWLOAD" lo cual tambien en consecuencia actualiza el stock de los productos pasados por parametro 
+ *     tags:
+ *       - Inventario
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *            type: object
+ *            properties:
+ *              operation_type:
+ *                type: string
+ *                description: "El tipo de operación a realizar"
+ *                enum:
+ *                 - LOAD
+ *                 - DOWNLOAD
+ *              description:
+ *                type: string
+ *                description: "Detalle o descripcion opcional que se le puede pasar a la operacion"
+ *              inventory_operation_details:
+ *                type: array
+ *                items:
+ *                  type: object
+ *                  properties:
+ *                    code_product:
+ *                      type: string
+ *                      description: "Codigo del producto"
+ *                    unit:
+ *                      type: number
+ *                      description: "Unidad del producto que se quiere cargar o descargar"
+ *                    amount:
+ *                      description: "Monto a cargar del producto"
+ *                      type: number
+ *           required:
+ *            - operation_type
+ *            - inventory_operation_details
+ *     responses:
+ *       200:
+ *         description: Devuelve la operacion completa con resultados calculados
+ *     security:
+ *       - bearerAuth: []
  * /inventory_operation/{correlative}:
  *   get:
  *     description: Devuelve la operacion de inventario pasada por parametro
