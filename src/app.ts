@@ -4,6 +4,7 @@ import AppRoute from "@/app.route";
 import AuthRoute from "@/auth/auth.route";
 import ProductsRoute from "@/products/products.route";
 import ProductsUnitsRoute from "@/products_units/products_units.route";
+import InventoryOperation from "@/inventory_operation/inventory_operation.route";
 import SwaggerRoute from "@/swagger/swagger.route";
 import { verifyToken } from "@/auth/auth.middleware";
 
@@ -24,7 +25,13 @@ const boostrap = () => {
 
   app.use(verifyToken);
 
-  app.use("/api", [AppRoute, AuthRoute, ProductsRoute, ProductsUnitsRoute]);
+  app.use("/api", [
+    AppRoute,
+    AuthRoute,
+    ProductsRoute,
+    ProductsUnitsRoute,
+    InventoryOperation,
+  ]);
 
   app.listen(PORT, () => {
     console.log("Listen on http://" + HOST + ":" + PORT);

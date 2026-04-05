@@ -63,6 +63,7 @@ export class ProductsStockService {
     product_code: string,
     unit: number,
     productStock: Partial<Omit<ProductStock, "product_code" | "unit">>,
+    take_last?: boolean,
   ): Promise<ProductStock> => {
     try {
       const productStockExists = await this.getOne(product_code, unit);
@@ -71,6 +72,10 @@ export class ProductsStockService {
       }
 
       const updatedStock = { ...productStockExists, ...productStock };
+
+      if (take_last && productStock.stock) {
+        updatedStock.stock = productStockExists.stock + productStock.stock;
+      }
 
       const result = await this.repository.query(
         "UPDATE products_stock SET stock = $3::integer WHERE product_code = $1::text AND unit = $2::integer RETURNING *",

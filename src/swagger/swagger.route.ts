@@ -18,11 +18,15 @@ const options: swaggerJsdoc.Options = {
     tags: [
       {
         name: "Autenticación",
-        description: "Endpoints para manejo de sesiones y tokens JWT"
+        description: "Endpoints para manejo de sesiones y tokens JWT",
       },
       {
         name: "Productos",
-        description: "Gestión de productos y unidades"
+        description: "Gestión de productos y unidades",
+      },
+      {
+        name: "Inventario",
+        description: "Operaciones relacionadas con el inventario",
       },
     ],
     components: {
