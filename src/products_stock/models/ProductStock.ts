@@ -1,5 +1,5 @@
 export interface ProductStock {
-  product_code: string;
+  product_id: number;
   unit: number;
   stock: number;
 }

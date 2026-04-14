@@ -1,13 +1,13 @@
 export interface InventoryOperation {
-  correlative: number;
-  emission_date: string;
+  id: number;
   operation_type: string;
   document_no: string;
+  emission_date: string;
   description: string;
   total: number;
   total_net: number;
   total_tax: number;
-  user_code: string;
+  user_id: number;
   total_details: number;
   total_amount: number;
 }

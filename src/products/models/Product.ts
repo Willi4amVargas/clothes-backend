@@ -1,7 +1,7 @@
 export interface Product {
+  id: number;
   code: string;
   description: string;
-  short_name: string;
   mark: string;
   model: string;
   referenc: string;

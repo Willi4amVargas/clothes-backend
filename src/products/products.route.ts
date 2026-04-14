@@ -29,8 +29,6 @@ const route = Router();
  *                type: string
  *              description:
  *                type: string
- *              short_name:
- *                type: string
  *              mark:
  *                type: string
  *              model:
@@ -54,8 +52,6 @@ const route = Router();
  *                  properties:
  *                    unit:
  *                      type: string
- *                    main_unit:
- *                      type: boolean
  *                    cost:
  *                      type: number
  *                    price:
@@ -63,7 +59,6 @@ const route = Router();
  *            required:
  *              - code
  *              - description
- *              - short_name
  *              - mark
  *              - model
  *              - referenc
@@ -77,20 +72,20 @@ const route = Router();
  *         description: Retorna el producto creado
  *     security:
  *       - bearerAuth: []
- * /products/{code}:
+ * /products/{id}:
  *   get:
  *     description: Devuelve un producto por su código
  *     tags:
  *       - Productos
  *     parameters:
  *       - in: path
- *         name: code
+ *         name: id
  *         required: true
  *         schema:
- *           type: string
+ *           type: number
  *     responses:
  *       200:
- *         description: Retorna el producto encontrado
+ *         description: Retorna el producto encontrado con sus unidades y stock
  *     security:
  *       - bearerAuth: []
  *   put:
@@ -99,10 +94,10 @@ const route = Router();
  *       - Productos
  *     parameters:
  *       - in: path
- *         name: code
+ *         name: id
  *         required: true
  *         schema:
- *           type: string
+ *           type: number
  *     requestBody:
  *       required: true
  *       content:
@@ -111,8 +106,6 @@ const route = Router();
  *            type: object
  *            properties:
  *              description:
- *                type: string
- *              short_name:
  *                type: string
  *              mark:
  *                type: string
@@ -135,12 +128,10 @@ const route = Router();
  *                items:
  *                  type: object
  *                  properties:
- *                    correlative:
+ *                    id:
  *                      type: number
  *                    unit:
  *                      type: string
- *                    main_unit:
- *                      type: boolean
  *                    cost:
  *                      type: number
  *                    price:
@@ -164,10 +155,10 @@ const route = Router();
  *        - Productos
  *      parameters:
  *        - in: path
- *          name: code
+ *          name: id
  *          required: true
  *          schema:
- *            type: string
+ *            type: number
  *      responses:
  *        200:
  *          description: Retorna el mensaje de que se ha eliminado el producto
@@ -179,9 +170,9 @@ const route = Router();
  *        - bearerAuth: []
  */
 route.get("/products", productsController.getAll);
-route.get("/products/:code", productsController.getOne);
+route.get("/products/:id", productsController.getOne);
 route.post("/products", productsController.create);
-route.put("/products/:code", productsController.update);
-route.delete("/products/:code", productsController.delete);
+route.put("/products/:id", productsController.update);
+route.delete("/products/:id", productsController.delete);
 
 export default route;

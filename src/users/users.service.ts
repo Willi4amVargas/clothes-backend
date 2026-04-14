@@ -4,14 +4,15 @@ import { User } from "@/users/models/User";
 export class UsersService {
   constructor(private repository: Pool) {}
 
-  getAll = async (): Promise<User[]> => {
-    try {
-      const result = await this.repository.query("SELECT * FROM users");
-      return result.rows;
-    } catch (error) {
-      throw new Error("Error fetching users");
-    }
-  };
+  // this is not in use for now
+  // getAll = async (): Promise<User[]> => {
+  //   try {
+  //     const result = await this.repository.query("SELECT * FROM users");
+  //     return result.rows;
+  //   } catch (error) {
+  //     throw new Error("Error fetching users");
+  //   }
+  // };
 
   getOne = async (code: string): Promise<User | null> => {
     try {

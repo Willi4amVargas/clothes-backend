@@ -12,6 +12,11 @@ import { ProductsUnitsController } from "@/products_units/products_units.control
 import { InventoryOperationService } from "@/inventory_operation/inventory_operation.service";
 import { InventoryOperationController } from "@/inventory_operation/inventory_operation.controller";
 import { InventoryOperationDetailsService } from "@/inventory_operation_details/inventory_operation_details.service";
+import { SalesOperationService } from "@/sales_operation/sales_operation.service";
+import { SalesOperationController } from "@/sales_operation/sales_operation.controller";
+import { SalesOperationDetailsService } from "@/sales_operation_details/sales_operation_details.service";
+import { ClientsService } from "@/clients/clients.service";
+import { ClientsController } from "./clients/clients.controller";
 
 export const appService = new AppService();
 export const appController = new AppController(appService);
@@ -46,4 +51,16 @@ export const inventoryOperationController = new InventoryOperationController(
   productsService,
   productsUnitsService,
   productsStockService,
+);
+
+export const clientsService = new ClientsService(pool);
+export const clientsController = new ClientsController(clientsService);
+
+export const salesOperationDetailsService = new SalesOperationDetailsService(
+  pool,
+);
+
+export const salesOperationService = new SalesOperationService(pool);
+export const salesOperationController = new SalesOperationController(
+  salesOperationService,
 );

@@ -25,19 +25,29 @@ export class ProductsController {
   };
 
   getOne = async (req: Request, res: Response) => {
-    const { code } = req.params;
-    if (!code || typeof code !== "string") {
+    const { id } = req.params;
+    if (!id || typeof id !== "string") {
       res.status(400).json({ message: "Invalid product code" });
       return;
     }
 
+    if (Number.isNaN(+id)) {
+      res.status(400).json({ message: "id is not a number" });
+      return;
+    }
+
+    if (+id <= 0) {
+      res.status(400).json({ message: "id can't be less or equal to 0" });
+      return;
+    }
+
     try {
-      const product = await this.productsService.getOne(code);
+      const product = await this.productsService.getOne(+id);
       if (!product) {
         return res.status(404).json({ message: "Product not found" });
       }
-      const units = await this.productsUnitsService.getAll(code);
-      const stock = await this.productsStockService.getAll(code);
+      const units = await this.productsUnitsService.getAll(+id);
+      const stock = await this.productsStockService.getAll(+id);
 
       const result = {
         ...product,
@@ -45,12 +55,12 @@ export class ProductsController {
         stock,
       };
 
-      res.json(result);
+      return res.json(result);
     } catch (error: any) {
       if (error.message) {
         return res.status(500).json({ message: error.message });
       }
-      res.status(500).json({ message: "Error fetching product" });
+      return res.status(500).json({ message: "Error fetching product" });
     }
   };
 
@@ -68,12 +78,12 @@ export class ProductsController {
       const newProduct = await this.productsService.create(product);
       const units = await Promise.all(
         product.products_units.map((unit) =>
-          this.productsUnitsService.create(newProduct.code, unit),
+          this.productsUnitsService.create(newProduct.id, unit),
         ),
       );
       const stock = await Promise.all(
         units.map((unit) =>
-          this.productsStockService.create(newProduct.code, unit.correlative, {
+          this.productsStockService.create(newProduct.id, unit.id, {
             stock: 0,
           }),
         ),
@@ -89,9 +99,19 @@ export class ProductsController {
   };
 
   update = async (req: Request, res: Response) => {
-    const { code } = req.params;
-    if (!code || typeof code !== "string") {
+    const { id } = req.params;
+    if (!id || typeof id !== "string") {
       res.status(400).json({ message: "Invalid product code" });
+      return;
+    }
+
+    if (Number.isNaN(+id)) {
+      res.status(400).json({ message: "id is not a number" });
+      return;
+    }
+
+    if (+id <= 0) {
+      res.status(400).json({ message: "id can't be less or equal to 0" });
       return;
     }
 
@@ -105,17 +125,13 @@ export class ProductsController {
     const product = UpdateProductDtoParse.data;
 
     try {
-      const updatedProduct = await this.productsService.update(code, product);
+      const updatedProduct = await this.productsService.update(+id, product);
       let updatedProductUnits = null;
 
       if (product.products_units) {
         updatedProductUnits = await Promise.all(
           product.products_units.map((unit) =>
-            this.productsUnitsService.update(
-              updatedProduct.code,
-              unit.correlative,
-              unit,
-            ),
+            this.productsUnitsService.update(updatedProduct.id, unit.id, unit),
           ),
         );
       }
@@ -131,14 +147,23 @@ export class ProductsController {
   };
 
   delete = async (req: Request, res: Response) => {
-    const { code } = req.params;
-    if (!code || typeof code !== "string") {
+    const { id } = req.params;
+    if (!id || typeof id !== "string") {
       res.status(400).json({ message: "Invalid product code" });
+      return;
+    }
+    if (Number.isNaN(+id)) {
+      res.status(400).json({ message: "id is not a number" });
+      return;
+    }
+
+    if (+id <= 0) {
+      res.status(400).json({ message: "id can't be less or equal to 0" });
       return;
     }
 
     try {
-      await this.productsService.delete(code);
+      await this.productsService.delete(+id);
       res.json({ message: "Product deleted successfully" });
     } catch (error: any) {
       if (error.message) {

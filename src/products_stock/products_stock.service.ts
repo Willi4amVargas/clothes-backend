@@ -4,11 +4,11 @@ import { ProductStock } from "@/products_stock/models/ProductStock";
 export class ProductsStockService {
   constructor(private repository: Pool) {}
 
-  getAll = async (product_code: string): Promise<ProductStock[]> => {
+  getAll = async (product_id: number): Promise<ProductStock[]> => {
     try {
       const result = await this.repository.query(
-        `SELECT * FROM products_stock WHERE product_code = $1::text`,
-        [product_code],
+        `SELECT * FROM products_stock WHERE product_id = $1::numeric`,
+        [product_id],
       );
       return result.rows;
     } catch (error: any) {
@@ -20,13 +20,13 @@ export class ProductsStockService {
   };
 
   getOne = async (
-    product_code: string,
+    product_id: number,
     unit: number,
   ): Promise<ProductStock | null> => {
     try {
       const result = await this.repository.query(
-        "SELECT * FROM products_stock WHERE product_code = $1::text AND unit = $2::integer",
-        [product_code, unit],
+        "SELECT * FROM products_stock WHERE product_id = $1::numeric AND unit = $2::numeric",
+        [product_id, unit],
       );
       if (result.rows.length <= 0) {
         return null;
@@ -41,14 +41,14 @@ export class ProductsStockService {
   };
 
   create = async (
-    product_code: string,
+    product_id: number,
     unit: number,
-    productStock: Omit<ProductStock, "product_code" | "unit">,
+    productStock: Omit<ProductStock, "product_id" | "unit">,
   ): Promise<ProductStock> => {
     try {
       const result = await this.repository.query(
-        "INSERT INTO products_stock (product_code, unit, stock) VALUES ($1::text, $2::integer, $3::integer) RETURNING *",
-        [product_code, unit, productStock.stock],
+        "INSERT INTO products_stock (product_id, unit, stock) VALUES ($1::text, $2::integer, $3::integer) RETURNING *",
+        [product_id, unit, productStock.stock],
       );
       return result.rows[0];
     } catch (error: any) {
@@ -60,13 +60,13 @@ export class ProductsStockService {
   };
 
   update = async (
-    product_code: string,
+    product_id: number,
     unit: number,
     productStock: Partial<Omit<ProductStock, "product_code" | "unit">>,
     take_last?: boolean,
   ): Promise<ProductStock> => {
     try {
-      const productStockExists = await this.getOne(product_code, unit);
+      const productStockExists = await this.getOne(product_id, unit);
       if (!productStockExists) {
         throw new Error("Product stock not found");
       }
@@ -78,8 +78,11 @@ export class ProductsStockService {
       }
 
       const result = await this.repository.query(
-        "UPDATE products_stock SET stock = $3::integer WHERE product_code = $1::text AND unit = $2::integer RETURNING *",
-        [product_code, unit, updatedStock.stock],
+        `
+        UPDATE public.products_stock SET stock=$1::numeric WHERE product_id=$2::numeric AND unit=$3::numeric RETURNING *
+        `,
+        //"UPDATE products_stock SET stock = $3::integer WHERE product_code = $1::text AND unit = $2::integer RETURNING *",
+        [updatedStock.stock, product_id, unit],
       );
       return result.rows[0];
     } catch (error: any) {
@@ -90,11 +93,11 @@ export class ProductsStockService {
     }
   };
 
-  delete = async (product_code: string, unit: number): Promise<void> => {
+  delete = async (product_id: number, unit: number): Promise<void> => {
     try {
       await this.repository.query(
-        "DELETE FROM products_stock WHERE product_code = $1::text AND unit = $2::integer",
-        [product_code, unit],
+        "DELETE FROM products_stock WHERE product_id = $1::numeric AND unit = $2::numeric",
+        [product_id, unit],
       );
     } catch (error: any) {
       if (error.message) {

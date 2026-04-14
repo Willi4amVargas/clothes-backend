@@ -12,6 +12,9 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
+        url: "http://localhost:5000/api/",
+      },
+      {
         url: "http://192.168.0.108:5000/api/",
       },
     ],
@@ -27,6 +30,10 @@ const options: swaggerJsdoc.Options = {
       {
         name: "Inventario",
         description: "Operaciones relacionadas con el inventario",
+      },
+      {
+        name: "Ventas",
+        description: "Operaciones relacionadas con las ventas",
       },
     ],
     components: {

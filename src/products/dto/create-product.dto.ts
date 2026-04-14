@@ -4,7 +4,6 @@ import z from "zod";
 export const CreateProductDto = z.object({
   code: z.string().min(2),
   description: z.string().min(2).max(255),
-  short_name: z.string().max(100),
   mark: z.string().max(100),
   model: z.string().max(100),
   referenc: z.string().max(100),

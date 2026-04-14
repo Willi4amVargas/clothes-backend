@@ -8,11 +8,11 @@ export class ProductsUnitsService {
     private productsService: ProductsService,
   ) {}
 
-  getAll = async (product_code: string): Promise<ProductUnit[]> => {
+  getAll = async (product_id: number): Promise<ProductUnit[]> => {
     try {
       const result = await this.repository.query(
-        "SELECT * FROM products_units WHERE product_code = $1::text",
-        [product_code],
+        "SELECT * FROM products_units WHERE product_id = $1::numeric",
+        [product_id],
       );
       return result.rows;
     } catch (error: any) {
@@ -24,13 +24,13 @@ export class ProductsUnitsService {
   };
 
   getOne = async (
-    product_code: string,
-    correlative: number,
+    product_id: number,
+    id: number,
   ): Promise<ProductUnit | null> => {
     try {
       const result = await this.repository.query(
-        "SELECT * FROM products_units WHERE product_code = $1::text AND correlative = $2::integer",
-        [product_code, correlative],
+        "SELECT * FROM products_units WHERE product_id = $1::numeric AND id = $2::numeric",
+        [product_id, id],
       );
       if (result.rows.length <= 0) {
         return null;
@@ -46,19 +46,21 @@ export class ProductsUnitsService {
   };
 
   create = async (
-    product_code: string,
-    unit: Omit<ProductUnit, "correlative" | "product_code">,
+    product_id: number,
+    unit: Omit<ProductUnit, "id" | "product_id">,
   ): Promise<ProductUnit> => {
     try {
-      const productExist = await this.productsService.getOne(product_code);
+      const productExist = await this.productsService.getOne(product_id);
 
       if (!productExist) {
         throw new Error("Product not found");
       }
 
       const result = await this.repository.query(
-        "INSERT INTO products_units (product_code, unit, main_unit, cost, price) VALUES ($1::text, $2::text, $3::boolean, $4::numeric, $5::numeric) RETURNING *",
-        [product_code, unit.unit, unit.main_unit, unit.cost, unit.price],
+        `
+        INSERT INTO public.products_units (unit, product_id, cost, price) VALUES($1::text, $2::numeric, $3::numeric, $4::numeric)
+        `,
+        [unit.unit, product_id, unit.cost, unit.price],
       );
       return result.rows[0];
     } catch (error: any) {
@@ -70,18 +72,18 @@ export class ProductsUnitsService {
   };
 
   update = async (
-    product_code: string,
-    correlative: number,
-    unit: Partial<Omit<ProductUnit, "correlative" | "product_code">>,
+    product_id: number,
+    id: number,
+    unit: Partial<Omit<ProductUnit, "id" | "product_id">>,
   ): Promise<ProductUnit> => {
     try {
-      const productExist = await this.productsService.getOne(product_code);
+      const productExist = await this.productsService.getOne(product_id);
 
       if (!productExist) {
         throw new Error("Product not found");
       }
 
-      const existingUnitResult = await this.getOne(product_code, correlative);
+      const existingUnitResult = await this.getOne(product_id, id);
 
       if (!existingUnitResult) {
         throw new Error("Product unit not found");
@@ -90,14 +92,16 @@ export class ProductsUnitsService {
       const updateProductUnit = { ...existingUnitResult, ...unit };
 
       const result = await this.repository.query(
-        "UPDATE products_units SET unit = $1::text, main_unit = $2::boolean, cost = $3::numeric, price = $4::numeric WHERE product_code = $5::text AND correlative = $6::integer RETURNING *",
+        `
+        UPDATE public.products_units SET unit=$1::text, cost=$2::numeric, price=$3::numeric WHERE id=$4::numeric AND product_id = $5::numeric RETURNING *
+        `,
+        //"UPDATE products_units SET unit = $1::text, main_unit = $2::boolean, cost = $3::numeric, price = $4::numeric WHERE product_code = $5::text AND correlative = $6::integer RETURNING *",
         [
           updateProductUnit.unit,
-          updateProductUnit.main_unit,
           updateProductUnit.cost,
           updateProductUnit.price,
-          product_code,
-          correlative,
+          id,
+          product_id,
         ],
       );
       return result.rows[0];
@@ -109,11 +113,11 @@ export class ProductsUnitsService {
     }
   };
 
-  delete = async (product_code: string, correlative: number): Promise<void> => {
+  delete = async (product_id: number, id: number): Promise<void> => {
     try {
       await this.repository.query(
-        "DELETE FROM products_units WHERE product_code = $1::text AND correlative = $2::integer",
-        [product_code, correlative],
+        "DELETE FROM products_units WHERE product_id = $1::numeric AND id = $2::numeric",
+        [product_id, id],
       );
     } catch (error: any) {
       if (error.message) {

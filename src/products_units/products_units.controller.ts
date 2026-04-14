@@ -6,9 +6,19 @@ export class ProductsUnitsController {
   constructor(private productsUnitsService: ProductsUnitsService) {}
 
   create = async (req: Request, res: Response) => {
-    const { code } = req.params;
-    if (!code || typeof code !== "string") {
+    const { id } = req.params;
+    if (!id || typeof id !== "string") {
       res.status(400).json({ message: "Invalid product code" });
+      return;
+    }
+
+    if (Number.isNaN(+id)) {
+      res.status(400).json({ message: "id is not a number" });
+      return;
+    }
+
+    if (+id <= 0) {
+      res.status(400).json({ message: "id can't be less or equal to 0" });
       return;
     }
 
@@ -21,12 +31,8 @@ export class ProductsUnitsController {
 
     const unit = createProductUnitDtoParse.data;
 
-    // Since we assume this endpoint is being used when a unit has already been created, even though `main_unit = true` is passed, we are sure it is false because one should already exist and we assign it false by default in this case for extra units (lots of text)
-    // This will probably cause problems, for now I'm solving it this way so that there aren't multiple main_unit = true
-    unit.main_unit = false;
-
     try {
-      const newUnit = await this.productsUnitsService.create(code, unit);
+      const newUnit = await this.productsUnitsService.create(+id, unit);
       return res.status(201).json(newUnit);
     } catch (error: any) {
       if (error.message) {

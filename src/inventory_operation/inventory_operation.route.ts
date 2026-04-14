@@ -40,7 +40,7 @@ const route = Router();
  *                items:
  *                  type: object
  *                  properties:
- *                    code_product:
+ *                    product_id:
  *                      type: string
  *                      description: "Codigo del producto"
  *                    unit:
@@ -57,14 +57,14 @@ const route = Router();
  *         description: Devuelve la operacion completa con resultados calculados
  *     security:
  *       - bearerAuth: []
- * /inventory_operation/{correlative}:
+ * /inventory_operation/{id}:
  *   get:
  *     description: Devuelve la operacion de inventario pasada por parametro
  *     tags:
  *       - Inventario
  *     parameters:
  *       - in: path
- *         name: correlative
+ *         name: id
  *         required: true
  *         schema:
  *           type: number
@@ -76,9 +76,13 @@ const route = Router();
  */
 route.get("/inventory_operation", inventoryOperationController.getAll);
 route.get(
-  "/inventory_operation/:correlative",
+  "/inventory_operation/:id",
   inventoryOperationController.getOne,
 );
 route.post("/inventory_operation", inventoryOperationController.create);
+// route.put(
+//   "/inventory_operation/:correlative",
+//   inventoryOperationController.update,
+// );
 
 export default route;

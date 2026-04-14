@@ -1,11 +1,8 @@
 export interface InventoryOperationDetails {
-  main_correlative: number;
+  main_id: number;
   line: number;
-  code_product: string;
+  product_id: number;
   description_product: string;
-  referenc: string;
-  mark: string;
-  model: string;
   amount: number;
   unit: number;
   unitary_cost: number;

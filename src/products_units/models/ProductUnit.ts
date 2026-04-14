@@ -1,8 +1,7 @@
 export interface ProductUnit {
-  correlative: number;
+  id: number;
   unit: string;
-  product_code: string;
-  main_unit: boolean;
+  product_id: number;
   cost: number;
   price: number;
 }

@@ -29,33 +29,33 @@ export class InventoryOperationController {
   };
 
   getOne = async (req: Request, res: Response) => {
-    const { correlative } = req.params;
-    if (!correlative || typeof correlative !== "string") {
-      res.status(400).json({ message: "Invalid correlative number" });
+    const { id } = req.params;
+    if (!id || typeof id !== "string") {
+      res.status(400).json({ message: "Invalid id number" });
       return;
     }
 
-    if (Number.isNaN(+correlative)) {
-      res.status(400).json({ message: "Correlative is not a number" });
+    if (Number.isNaN(+id)) {
+      res.status(400).json({ message: "id is not a number" });
       return;
     }
 
-    if (+correlative <= 0) {
+    if (+id <= 0) {
       res
         .status(400)
-        .json({ message: "Correlative can't be less or equal to 0" });
+        .json({ message: "id can't be less or equal to 0" });
       return;
     }
     try {
       const inventoryOperation =
-        await this.inventoryOperationService.getOne(+correlative);
+        await this.inventoryOperationService.getOne(+id);
       if (!inventoryOperation) {
         res.status(404).json({ message: "Inventory operation dont exist" });
         return;
       }
 
       const inventoryOperationDetails =
-        await this.inventoryOperationDetailsService.getAll(+correlative);
+        await this.inventoryOperationDetailsService.getAll(+id);
       const result = {
         ...inventoryOperation,
         inventory_operation_details: inventoryOperationDetails,
@@ -80,20 +80,20 @@ export class InventoryOperationController {
       }
 
       const inventoryOperation = createInventoryOperationDtoParse.data;
-      // comprobe if products exist
+      // comprobe if products exist and save it
       const productsExist = await Promise.all(
         inventoryOperation.inventory_operation_details.map((iod) =>
-          this.productsService.getOne(iod.code_product),
+          this.productsService.getOne(iod.product_id),
         ),
       );
 
       if (productsExist.includes(null)) {
         return res.status(400).json({ message: "Some products dont exist" });
       }
-      // comprobe if products units exist
+      // comprobe if products units exist and save it
       const productsUnitsExist = await Promise.all(
         inventoryOperation.inventory_operation_details.map((iod) =>
-          this.productsUnitsService.getOne(iod.code_product, iod.unit),
+          this.productsUnitsService.getOne(iod.product_id, iod.unit),
         ),
       );
       if (productsUnitsExist.includes(null)) {
@@ -102,7 +102,7 @@ export class InventoryOperationController {
           .json({ message: "Some products units dont exist" });
       }
 
-      // updated firts inventory operation details object
+      // create firts inventory operation details array of object making this loop for inventory operation details
       const newInventoryOperationDetails = [];
       for (
         let i = 0;
@@ -110,10 +110,10 @@ export class InventoryOperationController {
         i++
       ) {
         const iod = inventoryOperation.inventory_operation_details[i];
-        const product = productsExist.find((a) => a?.code === iod.code_product);
+        const product = productsExist.find((a) => a?.id === iod.product_id);
         const unit = productsUnitsExist.find(
           (e) =>
-            e?.product_code === iod.code_product && e.correlative === iod.unit,
+            e?.product_id === iod.product_id && e.id === iod.unit,
         );
         if (!product || !unit) {
           return res
@@ -131,38 +131,36 @@ export class InventoryOperationController {
           ...iod,
           ...resultTotals,
           description_product: product.description,
-          referenc: product.referenc,
-          mark: product.mark,
-          model: product.model,
           unitary_cost: unit.cost,
           aliquot: product.buy_tax,
         };
 
         newInventoryOperationDetails.push(finalDetail);
       }
-      // updated now inventory operation object
+      // finish the loop and with inventory operation details array of objects complete 
+      // create now inventory operation object
       const inventoryOperationTotals =
         this.inventoryOperationService.calculateTotals({
           details: newInventoryOperationDetails,
         });
       const document_no = await this.inventoryOperationService.getDocumentNo();
-      const newInventoryOperation = {
+      const newInventoryOperation  = {
         document_no,
-        user_code: res.locals.user.code,
+        user_id: res.locals.user.id,
         operation_type: inventoryOperation.operation_type,
         description: inventoryOperation.description,
         ...inventoryOperationTotals,
         inventory_operation_details: newInventoryOperationDetails,
       };
 
-      // next save in database
+      // next save in database inventory operation firts
       const createdInventoryOperation =
         await this.inventoryOperationService.create(newInventoryOperation);
-
+      // second inventory operation details with new id created
       const createdInventoryOperationDetails = await Promise.all(
         newInventoryOperationDetails.map((iod) =>
           this.inventoryOperationDetailsService.create(
-            createdInventoryOperation.correlative,
+            createdInventoryOperation.id,
             iod,
           ),
         ),
@@ -173,7 +171,7 @@ export class InventoryOperationController {
         newInventoryOperationDetails.map((iod) => {
           if (inventoryOperation.operation_type === "DOWNLOAD") {
             return this.productStockService.update(
-              iod.code_product,
+              iod.product_id,
               iod.unit,
               {
                 stock: iod.amount * -1,
@@ -182,7 +180,7 @@ export class InventoryOperationController {
             );
           } else if (inventoryOperation.operation_type === "LOAD") {
             return this.productStockService.update(
-              iod.code_product,
+              iod.product_id,
               iod.unit,
               {
                 stock: iod.amount,
@@ -204,4 +202,25 @@ export class InventoryOperationController {
       res.status(500).json({ message: "Error creating InventoryOperation" });
     }
   };
+
+  // update = async (req: Request, res: Response) => {
+  //   try {
+  //     const UpdateInventoryOperationDtoParse =
+  //       UpdateInventoryOperation.safeParse(req.body);
+
+  //     if (!UpdateInventoryOperationDtoParse.success) {
+  //       return res
+  //         .status(400)
+  //         .json({ message: UpdateInventoryOperationDtoParse.error?.issues });
+  //     }
+
+
+
+  //   } catch (error: any) {
+  //     if (error.message) {
+  //       return res.status(500).json({ message: error.message });
+  //     }
+  //     res.status(500).json({ message: "Error creating InventoryOperation" });
+  //   }
+  // };
 }

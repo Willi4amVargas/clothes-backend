@@ -1,4 +1,5 @@
 export interface User {
+  id: number;
   code: string;
   description: string;
   status: boolean;

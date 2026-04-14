@@ -5,13 +5,13 @@ const route = Router();
 
 /**
  * @openapi
- * /products_units/{code}:
+ * /products_units/{id}:
  *   post:
  *     description: Crea una nueva unidad de producto para el producto con el código especificado
  *     tags:
  *       - Productos
  *     parameters:
- *       - name: code
+ *       - name: id
  *         in: path
  *         required: true
  *     requestBody:
@@ -40,6 +40,6 @@ const route = Router();
  *       200:
  *         description: Retorna la unidad de producto creada
  */
-route.post("/products_units/:code", productsUnitsController.create);
+route.post("/products_units/:id", productsUnitsController.create);
 
 export default route;
