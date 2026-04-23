@@ -42,7 +42,7 @@ export class SalesOperationDetailsService {
 
   create = async (
     main_id: number,
-    sales_operation_detail: Omit<SalesOperationDetail, "main_correlative">,
+    sales_operation_detail: Omit<SalesOperationDetail, "main_id" | "line">,
   ): Promise<SalesOperationDetail> => {
     try {
       const result = await this.repository.query(
@@ -75,5 +75,40 @@ export class SalesOperationDetailsService {
       }
       throw new Error("Error creating SalesOperationDetail");
     }
+  };
+
+  calculateCostTotals = (
+    cost: number,
+    amount: number,
+    buy_aliquot: number,
+  ): {
+    total_net_cost: number;
+    total_tax_cost: number;
+    total_cost: number;
+  } => {
+    const total_net_cost = cost * amount;
+    const total_tax_cost = (total_net_cost * buy_aliquot) / 100;
+    const total_cost = total_net_cost + total_tax_cost;
+
+    return { total_net_cost, total_tax_cost, total_cost };
+  };
+
+  calculateTotals = (
+    price: number,
+    percent_discount: number,
+    amount: number,
+    sale_aliquot: number,
+  ): {
+    discount: number;
+    total_net: number;
+    total_tax: number;
+    total: number;
+  } => {
+    const subtotal = price * amount;
+    const discount = (subtotal * percent_discount) / 100;
+    const total_net = subtotal - discount;
+    const total_tax = (total_net * sale_aliquot) / 100;
+    const total = total_net + total_tax;
+    return { total_net, discount, total_tax, total };
   };
 }

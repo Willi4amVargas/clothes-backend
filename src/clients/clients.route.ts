@@ -15,6 +15,51 @@ const route = Router();
  *         description: Devuelve un listado todos los clientes en la base de datos
  *     security:
  *       - bearerAuth: []
+ *   post:
+ *     description: Crea un cliente nuevo
+ *     tags:
+ *       - Ventas
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *            type: object
+ *            properties:
+ *              code:
+ *                type: string
+ *              description:
+ *                type: string
+ *              client_id:
+ *                type: string
+ *              email:
+ *                type: string
+ *              phone:
+ *                type: string
+ *              country:
+ *                type: string
+ *              city:
+ *                type: string
+ *              address:
+ *                type: string
+ *              credit_days:
+ *                type: number
+ *              credit_limit:
+ *                type: number
+ *              discount:
+ *                type: number
+ *            required:
+ *              - code
+ *              - description
+ *              - client_id
+ *              - credit_days
+ *              - credit_limit
+ *              - discount
+ *     responses:
+ *       200:
+ *         description: Devuelve el cliente creado en la base de datos
+ *     security:
+ *       - bearerAuth: []
  * /clients/{id}:
  *   get:
  *     description: Devuelve un cliente por su id
@@ -31,8 +76,70 @@ const route = Router();
  *         description: Retorna el cliente encontrado
  *     security:
  *       - bearerAuth: []
+ *   put:
+ *     description: Actualiza un cliente
+ *     tags:
+ *       - Ventas
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: number
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *            type: object
+ *            properties:
+ *              code:
+ *                type: string
+ *              description:
+ *                type: string
+ *              client_id:
+ *                type: string
+ *              email:
+ *                type: string
+ *              phone:
+ *                type: string
+ *              country:
+ *                type: string
+ *              city:
+ *                type: string
+ *              address:
+ *                type: string
+ *              credit_days:
+ *                type: number
+ *              credit_limit:
+ *                type: number
+ *              discount:
+ *                type: number
+ *     responses:
+ *       200:
+ *         description: Devuelve el cliente creado en la base de datos
+ *     security:
+ *       - bearerAuth: []
+ *   delete:
+ *     description: Elimina un cliente por su id
+ *     tags:
+ *       - Ventas
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: number
+ *     responses:
+ *       200:
+ *         description: Cliente eliminado correctamente 
+ *     security:
+ *       - bearerAuth: []
  */
 route.get("/clients", clientsController.getAll);
 route.get("/clients/:id", clientsController.getOne);
+route.post("/clients", clientsController.create);
+route.put("/clients/:id", clientsController.update);
+route.delete("/clients/:id", clientsController.delete);
 
 export default route;

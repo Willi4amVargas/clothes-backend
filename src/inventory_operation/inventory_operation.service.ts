@@ -165,7 +165,9 @@ export class InventoryOperationService {
         "SELECT last_value + 1 as num FROM inventory_operation_id_seq",
       );
 
-      const documentNo = (result.rows[0].num as string).padStart(8, "0");
+      const lastNumber = String(result.rows[0].num);
+
+      const documentNo = lastNumber.padStart(8, "0");
 
       if (prefix) {
         return prefix + documentNo;

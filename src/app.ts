@@ -1,5 +1,4 @@
-import express, { NextFunction, Request, Response } from "express";
-import { env } from "@/config/env";
+import express, { Express } from "express";
 import AppRoute from "@/app.route";
 import AuthRoute from "@/auth/auth.route";
 import ProductsRoute from "@/products/products.route";
@@ -9,16 +8,10 @@ import ClientsRoute from "@/clients/clients.route";
 import SalesOperationRoute from "@/sales_operation/sales_operation.route";
 import SwaggerRoute from "@/swagger/swagger.route";
 import { verifyToken } from "@/auth/auth.middleware";
+import { dryRun } from "@/config/dryRun";
+import { logger } from "@/config/logger";
 
-const logger = (req: Request, _: Response, next: NextFunction) => {
-  console.log(req.method, req.url);
-  next();
-};
-
-const boostrap = () => {
-  const PORT = env.PORT || 3000;
-  // despues se arregla para que no sea solo el console.log
-  const HOST = env.HOST || "localhost";
+export const boostrap = (): Express => {
   const app = express();
   app.use(express.json());
   app.use(logger);
@@ -26,6 +19,7 @@ const boostrap = () => {
   app.use("/api", SwaggerRoute);
 
   app.use(verifyToken);
+  app.use(dryRun);
 
   app.use("/api", [
     AppRoute,
@@ -36,10 +30,5 @@ const boostrap = () => {
     ClientsRoute,
     SalesOperationRoute,
   ]);
-
-  app.listen(PORT, () => {
-    console.log("Listen on http://" + HOST + ":" + PORT);
-  });
+  return app;
 };
-
-boostrap();

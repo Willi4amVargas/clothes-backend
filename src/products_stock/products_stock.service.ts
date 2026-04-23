@@ -62,7 +62,7 @@ export class ProductsStockService {
   update = async (
     product_id: number,
     unit: number,
-    productStock: Partial<Omit<ProductStock, "product_code" | "unit">>,
+    productStock: Partial<Omit<ProductStock, "product_id" | "unit">>,
     take_last?: boolean,
   ): Promise<ProductStock> => {
     try {

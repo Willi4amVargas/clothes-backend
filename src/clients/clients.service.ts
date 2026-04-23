@@ -60,22 +60,30 @@ export class ClientsService {
       throw new Error("Error creating Client");
     }
   };
-  update = async (id: number, client: Omit<Client, "id">): Promise<Client> => {
+  update = async (
+    id: number,
+    client: Partial<Omit<Client, "id">>,
+  ): Promise<Client> => {
     try {
+      const existingClient = await this.getOne(id);
+      if (!existingClient) {
+        throw new Error("Client not found");
+      }
+      const updatedClient = { ...existingClient, ...client };
       const result = await this.repository.query(
-        `UPDATE public.clients SET code=$1::text, description=$2::text, client_id=$3::text, email=$4::text, phone=$5::text, country=$6::text, city=$7::text, address=$8::text, credit_days=$9::numeric, credit_limit=$10::numeric, discount=$11::numeric WHERE id=$12::numeric`,
+        `UPDATE public.clients SET code=$1::text, description=$2::text, client_id=$3::text, email=$4::text, phone=$5::text, country=$6::text, city=$7::text, address=$8::text, credit_days=$9::numeric, credit_limit=$10::numeric, discount=$11::numeric WHERE id=$12::numeric RETURNING *`,
         [
-          client.code,
-          client.description,
-          client.client_id,
-          client.email,
-          client.phone,
-          client.country,
-          client.city,
-          client.address,
-          client.credit_days,
-          client.credit_limit,
-          client.discount,
+          updatedClient.code,
+          updatedClient.description,
+          updatedClient.client_id,
+          updatedClient.email,
+          updatedClient.phone,
+          updatedClient.country,
+          updatedClient.city,
+          updatedClient.address,
+          updatedClient.credit_days,
+          updatedClient.credit_limit,
+          updatedClient.discount,
           id,
         ],
       );

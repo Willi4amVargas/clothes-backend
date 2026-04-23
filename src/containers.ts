@@ -63,4 +63,9 @@ export const salesOperationDetailsService = new SalesOperationDetailsService(
 export const salesOperationService = new SalesOperationService(pool);
 export const salesOperationController = new SalesOperationController(
   salesOperationService,
+  salesOperationDetailsService,
+  clientsService,
+  productsService,
+  productsUnitsService,
+  productsStockService,
 );

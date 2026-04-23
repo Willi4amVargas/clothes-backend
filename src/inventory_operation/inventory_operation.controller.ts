@@ -1,11 +1,10 @@
 import { InventoryOperationService } from "@/inventory_operation/inventory_operation.service";
 import { InventoryOperationDetailsService } from "@/inventory_operation_details/inventory_operation_details.service";
 import { Request, Response } from "express";
-import { CreateInventoryOperation } from "@/inventory_operation/dto/create-inventory-operation.dto";
+import { CreateInventoryOperationDto } from "@/inventory_operation/dto/create-inventory-operation.dto";
 import { ProductsService } from "@/products/products.service";
 import { ProductsUnitsService } from "@/products_units/products_units.service";
 import { ProductsStockService } from "@/products_stock/products_stock.service";
-import { User } from "@/users/models/User";
 
 export class InventoryOperationController {
   constructor(
@@ -41,9 +40,7 @@ export class InventoryOperationController {
     }
 
     if (+id <= 0) {
-      res
-        .status(400)
-        .json({ message: "id can't be less or equal to 0" });
+      res.status(400).json({ message: "id can't be less or equal to 0" });
       return;
     }
     try {
@@ -69,10 +66,11 @@ export class InventoryOperationController {
     }
   };
 
-  create = async (req: Request, res: Response<any, { user: User }>) => {
+  create = async (req: Request, res: Response) => {
+    const isDryRun = res.locals.dry_run;
     try {
       const createInventoryOperationDtoParse =
-        CreateInventoryOperation.safeParse(req.body);
+        CreateInventoryOperationDto.safeParse(req.body);
       if (!createInventoryOperationDtoParse.success) {
         return res
           .status(400)
@@ -112,8 +110,7 @@ export class InventoryOperationController {
         const iod = inventoryOperation.inventory_operation_details[i];
         const product = productsExist.find((a) => a?.id === iod.product_id);
         const unit = productsUnitsExist.find(
-          (e) =>
-            e?.product_id === iod.product_id && e.id === iod.unit,
+          (e) => e?.product_id === iod.product_id && e.id === iod.unit,
         );
         if (!product || !unit) {
           return res
@@ -137,14 +134,14 @@ export class InventoryOperationController {
 
         newInventoryOperationDetails.push(finalDetail);
       }
-      // finish the loop and with inventory operation details array of objects complete 
+      // finish the loop and with inventory operation details array of objects complete
       // create now inventory operation object
       const inventoryOperationTotals =
         this.inventoryOperationService.calculateTotals({
           details: newInventoryOperationDetails,
         });
       const document_no = await this.inventoryOperationService.getDocumentNo();
-      const newInventoryOperation  = {
+      const newInventoryOperation = {
         document_no,
         user_id: res.locals.user.id,
         operation_type: inventoryOperation.operation_type,
@@ -152,6 +149,13 @@ export class InventoryOperationController {
         ...inventoryOperationTotals,
         inventory_operation_details: newInventoryOperationDetails,
       };
+
+      if (isDryRun) {
+        return res.json({
+          ...newInventoryOperation,
+          inventory_operation_details: newInventoryOperationDetails,
+        });
+      }
 
       // next save in database inventory operation firts
       const createdInventoryOperation =
@@ -213,8 +217,6 @@ export class InventoryOperationController {
   //         .status(400)
   //         .json({ message: UpdateInventoryOperationDtoParse.error?.issues });
   //     }
-
-
 
   //   } catch (error: any) {
   //     if (error.message) {

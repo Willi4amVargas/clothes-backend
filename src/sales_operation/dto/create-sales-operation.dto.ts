@@ -3,11 +3,12 @@ import z from "zod";
 
 export const CreateSalesOperationDto = z.object({
   operation_type: z.enum(["SALE", "QUOTATION", "ORDER"]),
-  client_code: z.string(),
+  client_id: z.number(),
   seller: z.string(),
   description: z.string(),
-  credit: z.number(),
-  cash: z.number(),
+  //discount: z.number().min(0).max(100).default(0),
+  credit: z.number().default(0),
+  cash: z.number().default(0),
   pending: z.boolean(),
   sales_operation_details: z.array(CreateSalesOperationDetailDto).min(1),
 });

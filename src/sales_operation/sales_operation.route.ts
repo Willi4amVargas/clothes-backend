@@ -76,14 +76,14 @@ const route = Router();
  *         description: Devuelve la operacion realizada en la base de datos
  *     security:
  *       - bearerAuth: []
- * /sales_operation/{correlative}:
+ * /sales_operation/{id}:
  *   get:
  *     description: Devuelve la operacion de ventas pasada por parametro
  *     tags:
  *       - Ventas
  *     parameters:
  *       - in: path
- *         name: correlative
+ *         name: id
  *         required: true
  *         schema:
  *           type: number
@@ -94,7 +94,7 @@ const route = Router();
  *       - bearerAuth: []
  */
 route.get("/sales_operation", salesOperationController.getAll);
-route.get("/sales_operation/:correlative", salesOperationController.getOne);
+route.get("/sales_operation/:id", salesOperationController.getOne);
 route.post("/sales_operation/", salesOperationController.create);
 
 export default route;
