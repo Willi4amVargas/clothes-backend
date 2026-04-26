@@ -13,6 +13,10 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Devuelve un listado de las operaciones de inventario en la base de datos
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  *   post:
@@ -41,8 +45,8 @@ const route = Router();
  *                  type: object
  *                  properties:
  *                    product_id:
- *                      type: string
- *                      description: "Codigo del producto"
+ *                      type: number
+ *                      description: "Id del producto"
  *                    unit:
  *                      type: number
  *                      description: "Unidad del producto que se quiere cargar o descargar"
@@ -55,6 +59,12 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Devuelve la operacion completa con resultados calculados
+ *       400:
+ *         description: Error de validación del body
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  * /inventory_operation/{id}:
@@ -71,6 +81,12 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Devuelve la operacion de inventario pasada por correlativo
+ *       400:
+ *         description: Parámetro inválido
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  */

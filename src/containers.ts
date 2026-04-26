@@ -17,6 +17,9 @@ import { SalesOperationController } from "@/sales_operation/sales_operation.cont
 import { SalesOperationDetailsService } from "@/sales_operation_details/sales_operation_details.service";
 import { ClientsService } from "@/clients/clients.service";
 import { ClientsController } from "./clients/clients.controller";
+import { ShoppingOperationDetailsService } from "@/shopping_operation_details/shopping_operation_details.service";
+import { ShoppingOperationService } from "@/shopping_operation/shopping_operation.service";
+import { ShoppingOperationController } from "@/shopping_operation/shopping_operation.controller";
 
 export const appService = new AppService();
 export const appController = new AppController(appService);
@@ -65,6 +68,18 @@ export const salesOperationController = new SalesOperationController(
   salesOperationService,
   salesOperationDetailsService,
   clientsService,
+  productsService,
+  productsUnitsService,
+  productsStockService,
+);
+
+export const shoppingOperationDetailsService =
+  new ShoppingOperationDetailsService(pool);
+
+export const shoppingOperationService = new ShoppingOperationService(pool);
+export const shoppingOperationController = new ShoppingOperationController(
+  shoppingOperationService,
+  shoppingOperationDetailsService,
   productsService,
   productsUnitsService,
   productsStockService,

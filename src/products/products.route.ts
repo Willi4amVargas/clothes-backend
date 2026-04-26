@@ -12,6 +12,10 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Retorna un array con todos los productos
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  *   post:
@@ -70,6 +74,12 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Retorna el producto creado
+ *       400:
+ *         description: Error de validación del body
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  * /products/{id}:
@@ -86,6 +96,12 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Retorna el producto encontrado con sus unidades y stock
+ *       400:
+ *         description: Parámetro inválido
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  *   put:
@@ -139,12 +155,14 @@ const route = Router();
  *           required:
  *            - products_units.correlative
  *     responses:
- *       200:
+ *       201:
  *         description: Retorna el producto actualizado
  *       404:
  *         description: Producto no encontrado
  *       400:
  *         description: Solicitud inválida
+ *       401:
+ *         description: No autorizado
  *       500:
  *         description: Error interno del servidor
  *     security:
@@ -162,6 +180,10 @@ const route = Router();
  *      responses:
  *        200:
  *          description: Retorna el mensaje de que se ha eliminado el producto
+ *        400:
+ *          description: Parámetro inválido
+ *        401:
+ *          description: No autorizado
  *        404:
  *          description: Producto no encontrado
  *        500:

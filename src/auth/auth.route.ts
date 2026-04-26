@@ -26,6 +26,12 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Retorna el token si las credenciales son validas
+ *       400:
+ *         description: Error de validación del body
+ *       401:
+ *         description: Credenciales inválidas
+ *       500:
+ *         description: Error interno del servidor
  */
 route.post("/signin", authController.signIn);
 

@@ -13,6 +13,10 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Devuelve un listado de las operaciones de ventas en la base de datos
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  *   post:
@@ -36,10 +40,8 @@ const route = Router();
  *              description:
  *                type: string
  *                description: "Detalle o descripcion opcional que se le puede pasar a la operacion"
- *              control_no:
- *                type: string
- *              client_code:
- *                type: string
+ *              client_id:
+ *                type: number
  *              seller:
  *                type: string
  *              credit:
@@ -54,9 +56,9 @@ const route = Router();
  *                items:
  *                  type: object
  *                  properties:
- *                    code_product:
- *                      type: string
- *                      description: "Codigo del producto"
+ *                    product_id:
+ *                      type: number
+ *                      description: "Id del producto"
  *                    unit:
  *                      type: number
  *                      description: "Unidad del producto que se quiere"
@@ -65,15 +67,19 @@ const route = Router();
  *                      type: number
  *           required:
  *            - operation_type
- *            - control_no
- *            - client_code
+ *            - client_id
  *            - seller
- *            - credit
- *            - cash
+ *            - pending
  *            - sales_operation_details
  *     responses:
  *       200:
  *         description: Devuelve la operacion realizada en la base de datos
+ *       400:
+ *         description: Error de validación del body
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  * /sales_operation/{id}:
@@ -90,6 +96,12 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Devuelve la operacion de venta pasada por correlativo
+ *       400:
+ *         description: Parámetro inválido
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  */

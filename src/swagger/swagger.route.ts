@@ -35,6 +35,10 @@ const options: swaggerJsdoc.Options = {
         name: "Ventas",
         description: "Operaciones relacionadas con las ventas",
       },
+      {
+        name: "Compras",
+        description: "Operaciones relacionadas con las compras",
+      },
     ],
     components: {
       securitySchemes: {
@@ -52,6 +56,19 @@ const options: swaggerJsdoc.Options = {
 const router = Router();
 const swaggerSpec = swaggerJsdoc(options);
 
+/**
+ * @openapi
+ * /docs:
+ *   get:
+ *     description: Muestra la documentación interactiva de la API
+ *     tags:
+ *       - Autenticación
+ *     responses:
+ *       200:
+ *         description: Documentación Swagger renderizada
+ *       500:
+ *         description: Error interno del servidor
+ */
 router.use("/docs", swaggerUi.serve);
 router.get("/docs", swaggerUi.setup(swaggerSpec));
 

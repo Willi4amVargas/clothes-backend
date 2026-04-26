@@ -13,6 +13,10 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Devuelve un listado todos los clientes en la base de datos
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  *   post:
@@ -58,6 +62,12 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Devuelve el cliente creado en la base de datos
+ *       400:
+ *         description: Error de validación del body
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  * /clients/{id}:
@@ -74,6 +84,12 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Retorna el cliente encontrado
+ *       400:
+ *         description: Parámetro inválido
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  *   put:
@@ -118,6 +134,12 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Devuelve el cliente creado en la base de datos
+ *       400:
+ *         description: Error de validación del body o parámetro
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  *   delete:
@@ -133,6 +155,12 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Cliente eliminado correctamente 
+ *       400:
+ *         description: Parámetro inválido
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  *     security:
  *       - bearerAuth: []
  */

@@ -8,6 +8,7 @@ module.exports = {
   transform: {
     ...tsJestTransformCfg,
   },
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   transformIgnorePatterns: ["/node_modules/(?!jose)/"],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

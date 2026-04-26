@@ -11,6 +11,10 @@ export const route = Router();
  *     responses:
  *       200:
  *         description: Devueve un mensage misterioso
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  */
 route.get("/", appController.get);
 

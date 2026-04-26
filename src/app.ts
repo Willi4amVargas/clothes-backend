@@ -6,6 +6,7 @@ import ProductsUnitsRoute from "@/products_units/products_units.route";
 import InventoryOperationRoute from "@/inventory_operation/inventory_operation.route";
 import ClientsRoute from "@/clients/clients.route";
 import SalesOperationRoute from "@/sales_operation/sales_operation.route";
+import ShoppingOperationRoute from "@/shopping_operation/shopping_operation.route";
 import SwaggerRoute from "@/swagger/swagger.route";
 import { verifyToken } from "@/auth/auth.middleware";
 import { dryRun } from "@/config/dryRun";
@@ -29,6 +30,7 @@ export const boostrap = (): Express => {
     InventoryOperationRoute,
     ClientsRoute,
     SalesOperationRoute,
+    ShoppingOperationRoute,
   ]);
   return app;
 };

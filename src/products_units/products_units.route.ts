@@ -23,9 +23,6 @@ const route = Router();
  *            properties:
  *              unit:
  *                type: string
- *              main_unit:
- *                type: boolean
- *                default: true
  *              cost:
  *                type: number
  *              price:
@@ -39,6 +36,12 @@ const route = Router();
  *     responses:
  *       200:
  *         description: Retorna la unidad de producto creada
+ *       400:
+ *         description: Error de validación del body o parámetro
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  */
 route.post("/products_units/:id", productsUnitsController.create);
 
