@@ -23,6 +23,14 @@ const route = Router();
  *     description: Crea una operacion de ventas en la base de datos
  *     tags:
  *       - Ventas
+ *     parameters:
+ *       - in: query
+ *         name: dry_run
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *         description: If true, the request will be validated and simulated without persisting changes to the database.
  *     requestBody:
  *       required: true
  *       content:

@@ -23,6 +23,14 @@ const route = Router();
  *     description: Crea un cliente nuevo
  *     tags:
  *       - Ventas
+ *     parameters:
+ *       - in: query
+ *         name: dry_run
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *         description: If true, the request will be validated and simulated without persisting changes to the database.
  *     requestBody:
  *       required: true
  *       content:
@@ -102,6 +110,13 @@ const route = Router();
  *         required: true
  *         schema:
  *           type: number
+ *       - in: query
+ *         name: dry_run
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *         description: If true, the request will be validated and simulated without persisting changes to the database.
  *     requestBody:
  *       required: true
  *       content:
@@ -152,9 +167,16 @@ const route = Router();
  *         required: true
  *         schema:
  *           type: number
+ *       - in: query
+ *         name: dry_run
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *         description: If true, the request will be validated and simulated without persisting changes to the database.
  *     responses:
  *       200:
- *         description: Cliente eliminado correctamente 
+ *         description: Cliente eliminado correctamente
  *       400:
  *         description: Parámetro inválido
  *       401:

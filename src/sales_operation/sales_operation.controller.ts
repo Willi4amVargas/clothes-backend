@@ -217,6 +217,9 @@ export class SalesOperationController {
         return res.json({
           ...newSalesOperation,
           sales_operation_details: newSalesOperationDetails,
+          dry_run: true,
+          message:
+            "Dry run enabled: request validated and simulated without persisting changes",
         });
       }
 

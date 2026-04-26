@@ -6,6 +6,7 @@ export class ProductsUnitsController {
   constructor(private productsUnitsService: ProductsUnitsService) {}
 
   create = async (req: Request, res: Response) => {
+    const isDryRun = res.locals.dry_run;
     const { id } = req.params;
     if (!id || typeof id !== "string") {
       res.status(400).json({ message: "Invalid product code" });
@@ -32,6 +33,16 @@ export class ProductsUnitsController {
     const unit = createProductUnitDtoParse.data;
 
     try {
+      if (isDryRun) {
+        return res.status(201).json({
+          id: 0,
+          product_id: +id,
+          ...unit,
+          dry_run: true,
+          message:
+            "Dry run enabled: request validated and simulated without persisting changes",
+        });
+      }
       const newUnit = await this.productsUnitsService.create(+id, unit);
       return res.status(201).json(newUnit);
     } catch (error: any) {

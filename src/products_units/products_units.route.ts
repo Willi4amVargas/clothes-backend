@@ -14,6 +14,13 @@ const route = Router();
  *       - name: id
  *         in: path
  *         required: true
+ *       - in: query
+ *         name: dry_run
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *         description: If true, the request will be validated and simulated without persisting changes to the database.
  *     requestBody:
  *       required: true
  *       content:

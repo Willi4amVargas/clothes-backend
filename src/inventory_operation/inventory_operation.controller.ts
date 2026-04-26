@@ -154,6 +154,9 @@ export class InventoryOperationController {
         return res.json({
           ...newInventoryOperation,
           inventory_operation_details: newInventoryOperationDetails,
+          dry_run: true,
+          message:
+            "Dry run enabled: request validated and simulated without persisting changes",
         });
       }
 

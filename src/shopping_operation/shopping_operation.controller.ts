@@ -49,7 +49,9 @@ export class ShoppingOperationController {
     try {
       const shoppingOperation = await this.shoppingOperationService.getOne(+id);
       if (!shoppingOperation) {
-        return res.status(404).json({ message: "Shopping operation dont exist" });
+        return res
+          .status(404)
+          .json({ message: "Shopping operation dont exist" });
       }
 
       const shoppingOperationDetails =
@@ -68,9 +70,8 @@ export class ShoppingOperationController {
   };
 
   create = async (req: Request, res: Response) => {
-    const createShoppingOperationDtoParse = CreateShoppingOperationDto.safeParse(
-      req.body,
-    );
+    const createShoppingOperationDtoParse =
+      CreateShoppingOperationDto.safeParse(req.body);
     if (!createShoppingOperationDtoParse.success) {
       return res
         .status(400)
@@ -103,7 +104,11 @@ export class ShoppingOperationController {
         ShoppingOperationDetail,
         "main_id" | "line"
       >[] = [];
-      for (let i = 0; i < shoppingOperation.shopping_operation_details.length; i++) {
+      for (
+        let i = 0;
+        i < shoppingOperation.shopping_operation_details.length;
+        i++
+      ) {
         const detail = shoppingOperation.shopping_operation_details[i];
         const product = products.find((p) => p?.id === detail.product_id);
         const unit = units.find((u) => u?.id === detail.unit);
@@ -141,7 +146,9 @@ export class ShoppingOperationController {
           .json({ message: "Credit cant be more than total" });
       }
       if (shoppingOperation.cash > totals.total) {
-        return res.status(400).json({ message: "Cash cant be more than total" });
+        return res
+          .status(400)
+          .json({ message: "Cash cant be more than total" });
       }
       if (shoppingOperation.credit + shoppingOperation.cash > totals.total) {
         return res
@@ -150,26 +157,32 @@ export class ShoppingOperationController {
       }
 
       const documentNo = await this.shoppingOperationService.getDocumentNo();
-      const newShoppingOperation: Omit<ShoppingOperation, "id" | "emission_date"> =
-        {
-          operation_type: shoppingOperation.operation_type,
-          document_no: documentNo,
-          description: shoppingOperation.description,
-          user_id: +res.locals.user.id,
-          total_amount: totals.total_amount,
-          total_net: totals.total_net,
-          total_tax: totals.total_tax,
-          total: totals.total,
-          credit: shoppingOperation.credit,
-          cash: shoppingOperation.cash,
-          total_count_details: shoppingOperation.shopping_operation_details.length,
-          pending: shoppingOperation.pending,
-        };
+      const newShoppingOperation: Omit<
+        ShoppingOperation,
+        "id" | "emission_date"
+      > = {
+        operation_type: shoppingOperation.operation_type,
+        document_no: documentNo,
+        description: shoppingOperation.description,
+        user_id: +res.locals.user.id,
+        total_amount: totals.total_amount,
+        total_net: totals.total_net,
+        total_tax: totals.total_tax,
+        total: totals.total,
+        credit: shoppingOperation.credit,
+        cash: shoppingOperation.cash,
+        total_count_details:
+          shoppingOperation.shopping_operation_details.length,
+        pending: shoppingOperation.pending,
+      };
 
       if (isDryRun) {
         return res.json({
           ...newShoppingOperation,
           shopping_operation_details: newShoppingOperationDetails,
+          dry_run: true,
+          message:
+            "Dry run enabled: request validated and simulated without persisting changes",
         });
       }
 

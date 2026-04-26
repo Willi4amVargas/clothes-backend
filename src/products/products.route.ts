@@ -22,6 +22,14 @@ const route = Router();
  *     description: Crea un nuevo producto con los datos proporcionados
  *     tags:
  *       - Productos
+ *     parameters:
+ *       - in: query
+ *         name: dry_run
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *         description: If true, the request will be validated and simulated without persisting changes to the database.
  *     requestBody:
  *       required: true
  *       content:
@@ -70,7 +78,7 @@ const route = Router();
  *              - buy_tax
  *              - sale_tax
  *              - products_units
- *  
+ *
  *     responses:
  *       200:
  *         description: Retorna el producto creado
@@ -114,6 +122,13 @@ const route = Router();
  *         required: true
  *         schema:
  *           type: number
+ *       - in: query
+ *         name: dry_run
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *         description: If true, the request will be validated and simulated without persisting changes to the database.
  *     requestBody:
  *       required: true
  *       content:
@@ -177,6 +192,13 @@ const route = Router();
  *          required: true
  *          schema:
  *            type: number
+ *        - in: query
+ *          name: dry_run
+ *          required: false
+ *          schema:
+ *            type: boolean
+ *            default: true
+ *          description: If true, the request will be validated and simulated without persisting changes to the database.
  *      responses:
  *        200:
  *          description: Retorna el mensaje de que se ha eliminado el producto

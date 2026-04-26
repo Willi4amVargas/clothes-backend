@@ -20,9 +20,17 @@ const route = Router();
  *     security:
  *       - bearerAuth: []
  *   post:
- *     description: Crea una operacion de inventario puede ser "LOAD" o "DOWLOAD" lo cual tambien en consecuencia actualiza el stock de los productos pasados por parametro 
+ *     description: Crea una operacion de inventario puede ser "LOAD" o "DOWLOAD" lo cual tambien en consecuencia actualiza el stock de los productos pasados por parametro
  *     tags:
  *       - Inventario
+ *     parameters:
+ *       - in: query
+ *         name: dry_run
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *         description: If true, the request will be validated and simulated without persisting changes to the database.
  *     requestBody:
  *       required: true
  *       content:
@@ -91,10 +99,7 @@ const route = Router();
  *       - bearerAuth: []
  */
 route.get("/inventory_operation", inventoryOperationController.getAll);
-route.get(
-  "/inventory_operation/:id",
-  inventoryOperationController.getOne,
-);
+route.get("/inventory_operation/:id", inventoryOperationController.getOne);
 route.post("/inventory_operation", inventoryOperationController.create);
 // route.put(
 //   "/inventory_operation/:correlative",
