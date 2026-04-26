@@ -76,19 +76,19 @@ export class ProductsController {
 
     try {
       const newProduct = await this.productsService.create(product);
-      const units = await Promise.all(
+      const newUnits = await Promise.all(
         product.products_units.map((unit) =>
           this.productsUnitsService.create(newProduct.id, unit),
         ),
       );
-      const stock = await Promise.all(
-        units.map((unit) =>
+      const newStock = await Promise.all(
+        newUnits.map((unit) =>
           this.productsStockService.create(newProduct.id, unit.id, {
             stock: 0,
           }),
         ),
       );
-      const result = { ...newProduct, units, stock };
+      const result = { ...newProduct, units: newUnits, stock: newStock };
       res.status(201).json(result);
     } catch (error: any) {
       if (error.message) {

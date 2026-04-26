@@ -58,7 +58,7 @@ export class ProductsUnitsService {
 
       const result = await this.repository.query(
         `
-        INSERT INTO public.products_units (unit, product_id, cost, price) VALUES($1::text, $2::numeric, $3::numeric, $4::numeric)
+        INSERT INTO public.products_units (unit, product_id, cost, price) VALUES($1::text, $2::numeric, $3::numeric, $4::numeric) RETURNING *
         `,
         [unit.unit, product_id, unit.cost, unit.price],
       );

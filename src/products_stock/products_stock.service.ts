@@ -47,7 +47,7 @@ export class ProductsStockService {
   ): Promise<ProductStock> => {
     try {
       const result = await this.repository.query(
-        "INSERT INTO products_stock (product_id, unit, stock) VALUES ($1::text, $2::integer, $3::integer) RETURNING *",
+        "INSERT INTO products_stock (product_id, unit, stock) VALUES ($1::integer, $2::integer, $3::integer) RETURNING *",
         [product_id, unit, productStock.stock],
       );
       return result.rows[0];

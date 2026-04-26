@@ -33,8 +33,8 @@ const route = Router();
  *               operation_type:
  *                 type: string
  *                 enum:
- *                   - BUY
- *                   - ORDER
+ *                   - SHOPPING
+ *                   - EXPENSE
  *               description:
  *                 type: string
  *               credit:
