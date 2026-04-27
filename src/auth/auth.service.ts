@@ -1,7 +1,9 @@
-import { SignJWT, jwtVerify } from "jose";
+import { JWTPayload, SignJWT, jwtVerify } from "jose";
 import { UsersService } from "@/users/users.service";
 import { env } from "@/config/env";
+import { User } from "@/users/models/User";
 
+interface UserPayload extends JWTPayload, User {}
 export class AuthService {
   constructor(private usersService: UsersService) {}
 
@@ -29,11 +31,12 @@ export class AuthService {
       throw new Error("Error signing in");
     }
   };
-  static verifyToken = async (token: string) => {
+  static verifyToken = async (token: string): Promise<UserPayload> => {
     try {
       const secret = new TextEncoder().encode(env.JWT_SECRET);
       const { payload } = await jwtVerify(token, secret);
-      return payload;
+      const user = payload as UserPayload;
+      return user;
     } catch (error) {
       throw new Error("Invalid token");
     }
