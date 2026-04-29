@@ -11,11 +11,13 @@ import SwaggerRoute from "@/swagger/swagger.route";
 import { verifyToken } from "@/auth/auth.middleware";
 import { dryRun } from "@/config/dryRun";
 import { logger } from "@/config/logger";
+import cors from "cors"
 
 export const boostrap = (): Express => {
   const app = express();
   app.use(express.json());
   app.use(logger);
+  app.use(cors())
 
   app.use("/api", SwaggerRoute);
 
