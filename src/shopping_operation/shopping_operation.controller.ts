@@ -164,7 +164,7 @@ export class ShoppingOperationController {
         operation_type: shoppingOperation.operation_type,
         document_no: documentNo,
         description: shoppingOperation.description,
-        user_id: +res.locals.user.id,
+        user_id: res.locals.user.id,
         total_amount: totals.total_amount,
         total_net: totals.total_net,
         total_tax: totals.total_tax,
