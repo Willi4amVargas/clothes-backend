@@ -50,25 +50,12 @@ const options: swaggerJsdoc.Options = {
       },
     },
   },
-  apis: ["./src/**/*.route.ts", "./src/app.route.ts"],
+  apis: ["./src/**/*.docs.yaml"],
 };
 
 const router = Router();
 const swaggerSpec = swaggerJsdoc(options);
 
-/**
- * @openapi
- * /docs:
- *   get:
- *     description: Muestra la documentación interactiva de la API
- *     tags:
- *       - Autenticación
- *     responses:
- *       200:
- *         description: Documentación Swagger renderizada
- *       500:
- *         description: Error interno del servidor
- */
 router.use("/docs", swaggerUi.serve);
 router.get("/docs", swaggerUi.setup(swaggerSpec));
 
