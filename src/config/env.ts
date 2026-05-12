@@ -6,6 +6,7 @@ interface IEnvirontmentVariables {
   DB_NAME: string;
   DB_PASSWORD: string;
   DB_PORT: number;
+  DB_URL: string;
   JWT_SECRET: string;
 }
 

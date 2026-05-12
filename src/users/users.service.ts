@@ -24,7 +24,10 @@ export class UsersService {
         return null;
       }
       return result.rows[0];
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
       throw new Error("Error fetching user");
     }
   };

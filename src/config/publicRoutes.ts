@@ -5,23 +5,18 @@ interface IPublicRoutes {
 
 export const publicRoutes: IPublicRoutes[] = [
   {
-    route: "/api/signin/",
+    // Acepta /api/signin y /api/signin/
+    route: "^/api/signin/?$", 
     method: "POST",
   },
   {
-    route: "/api/signin",
-    method: "POST",
-  },
-  {
-    route: "/api/docs",
+    // Acepta /api/docs, /api/docs/, y cualquier sub-ruta como /api/docs/swagger.json
+    route: "^/api/docs(/.*)?/?$", 
     method: "GET",
   },
   {
-    route: "/api/docs/",
-    method: "GET",
-  },
-  {
-    route: "/api/",
+    // Acepta la ruta raíz /api o /api/
+    route: "^/api/?$", 
     method: "GET",
   },
 ] as const;

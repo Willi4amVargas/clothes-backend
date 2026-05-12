@@ -7,13 +7,11 @@ export const verifyToken = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { url, method } = req;
-  // el manejo de las rutas publicas puede hacerse mejor pero por ahora se quedara asi
-  const isPublicRoute = publicRoutes.some(
-    (r) =>
-      r.route.toLowerCase() === url.toLowerCase() &&
-      r.method.toLowerCase() === method.toLowerCase(),
-  );
+  const { path, method } = req;
+  const isPublicRoute = publicRoutes.some(publicRoute => {
+    const routeRegExp = new RegExp(publicRoute.route);
+    return publicRoute.method.toLowerCase() === method.toLowerCase() && routeRegExp.test(path);
+  });
 
   if (isPublicRoute) {
     return next();
