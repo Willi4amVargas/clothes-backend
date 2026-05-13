@@ -3,7 +3,7 @@ import { types } from "pg";
 import { env } from "@/config/env";
 
 const connectionData: PoolConfig = env.DB_URL
-  ? { connectionString: env.DB_URL, ssl: true }
+  ? { connectionString: env.DB_URL }
   : {
       user: env.DB_USER || "postgres",
       host: env.DB_HOST || "localhost",
