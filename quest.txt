@@ -1,0 +1,17 @@
+Recuperar contraseña:
+
+Crear un endpoint para recuperar contraseña si el usuario la ovida
+el endpoint recibe como parametro el email
+debera validar si el correo existe en el sistema, de lo contrario devolver un mensaje informativo
+en caso de si existir debe de :
+crear nueva contraseña para ese usuario (encriptada)
+enviar un correo a esa direccion (usar la libreria nodemailer o cualquiera gratuita)
+ir de nuevo al endpoint de login y debe funcionar correctamente
+
+Integration test:
+realizar test de integracion en al menos 6 enpoints y validar que esten corriendo adecuadamente, debe de hacer uso de esquemas de validacion para verificar que la respuesta del endpoint coincide con lo esperado, 
+
+Endpoints Perfil de usuario:
+
+crear un nuevo endpoint /profile y /profile_update, 
+que permita traer los datos del usuario en sesion (id, email, nombre, apellido, rol), y actualizar el registro de dicho usuario, realizar la documentacion de esos nuevos endpoints haciendo uso de la libreria swagger

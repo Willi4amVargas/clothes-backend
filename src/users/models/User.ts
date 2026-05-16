@@ -4,6 +4,6 @@ export interface User {
   description: string;
   status: boolean;
   email: string;
-  profile: string;
+  profile: number;
   password: string;
 }

@@ -8,6 +8,12 @@ interface IEnvirontmentVariables {
   DB_PORT: number;
   DB_URL: string;
   JWT_SECRET: string;
+  MAIL_FROM: string;
+  MAIL_HOST: string;
+  MAIL_PORT: number;
+  MAIL_USERNAME: string;
+  MAIL_PASSWORD: string;
+  MAIL_ENCRYPTION: string;
 }
 
 export const env: IEnvirontmentVariables =

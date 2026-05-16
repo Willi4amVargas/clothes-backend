@@ -20,6 +20,12 @@ import { ClientsController } from "./clients/clients.controller";
 import { ShoppingOperationDetailsService } from "@/shopping_operation_details/shopping_operation_details.service";
 import { ShoppingOperationService } from "@/shopping_operation/shopping_operation.service";
 import { ShoppingOperationController } from "@/shopping_operation/shopping_operation.controller";
+import { UserController } from "@/users/users.controller";
+import { MailService } from "@/mail/mail.service";
+import { transporter } from "@/mail/mail.transporter";
+import { TemplateService } from "@/templates/template.service";
+
+export const templateService = new TemplateService();
 
 export const appService = new AppService();
 export const appController = new AppController(appService);
@@ -83,4 +89,12 @@ export const shoppingOperationController = new ShoppingOperationController(
   productsService,
   productsUnitsService,
   productsStockService,
+);
+
+export const mailService = new MailService(transporter);
+
+export const userController = new UserController(
+  usersService,
+  mailService,
+  templateService,
 );
