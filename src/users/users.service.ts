@@ -2,7 +2,7 @@ import { Pool } from "pg";
 import { User } from "@/users/models/User";
 
 export class UsersService {
-  constructor(private repository: Pool) {}
+  constructor(private repository: Pool) { }
 
   // this is not in use for now
   // getAll = async (): Promise<User[]> => {
@@ -69,12 +69,39 @@ export class UsersService {
           id,
         ],
       );
-      return result.rows[0];
+      const { password, ...updatedUserReturn } = result.rows[0]
+      return updatedUserReturn
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
       }
       throw new Error("Error fetching user");
+    }
+  }
+
+  updatePassword = async (id: number, hashedPassword: string) => {
+    try {
+      await this.repository.query(
+        "UPDATE public.users SET password=$1::text, recovery_token=NULL, recovery_token_expires_at=NULL WHERE id=$2::numeric",
+        [hashedPassword, id],
+      );
+    } catch (error: any) {
+      throw new Error(error.message || "Error updating password");
+    }
+  };
+
+  setRecoveryCode = async (
+    id: number,
+    hashedCode: string,
+    expiresAt: Date,
+  ) => {
+    try {
+      await this.repository.query(
+        "UPDATE public.users SET recovery_token=$1::text, recovery_token_expires_at=$2::timestamp WHERE id=$3::numeric",
+        [hashedCode, expiresAt, id],
+      );
+    } catch (error: any) {
+      throw new Error(error.message || "Error setting recovery code");
     }
   };
 }

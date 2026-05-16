@@ -6,4 +6,6 @@ export interface User {
   email: string;
   profile: number;
   password: string;
+  recovery_token?: string;
+  recovery_token_expires_at?: Date;
 }

@@ -3,21 +3,39 @@ paths:
     get:
       tags:
         - Autenticación
-      description: Muestra la informacion del usuario logeado actualmente
+      description: Muestra la información del usuario logueado actualmente (obtenida del token JWT).
       responses:
         200:
-          description: Informacion del usuario
+          description: Información del usuario (excluyendo la contraseña).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  profile:
+                    type: integer
+                  code:
+                    type: string
+                  description:
+                    type: string
+                  email:
+                    type: string
+                  status:
+                    type: boolean
+        401:
+          description: No autorizado, token inválido o faltante.
         500:
-          description: Error interno del servidor
+          description: Error interno del servidor.
       security:
         - bearerAuth: []
-  /profile_update:
-    post:
+    put:
       tags:
         - Autenticación
-      description: Actualiza el perfil del usuario
+      description: Actualiza la información del perfil del usuario logueado.
       requestBody:
-        description: Datos para actualizar el perfil del usuario (UpdateUserDto). Todos los campos son opcionales.
+        description: Datos para actualizar el perfil. Todos los campos son opcionales.
         required: true
         content:
           application/json:
@@ -26,42 +44,118 @@ paths:
               properties:
                 profile:
                   type: integer
-                  minimum: 0
-                  description: El ID del rol de perfil asignado al usuario.
+                  description: ID del perfil o rol asignado.
                 code:
                   type: string
                   minLength: 2
-                  description: Código o identificador único del usuario.
+                  description: Código identificador del usuario.
                 password:
                   type: string
                   minLength: 2
-                  description: La nueva contraseña para el usuario.
+                  description: Nueva contraseña para el usuario.
                 description:
                   type: string
                   minLength: 2
-                  description: El nombre o descripción del usuario.
+                  description: Nombre o descripción del usuario.
                 email:
                   type: string
                   format: email
-                  description: La dirección de correo electrónico del usuario.
+                  description: Correo electrónico del usuario.
                 status:
                   type: boolean
-                  description: Estado de activación del usuario (true = activo, false = inactivo).
+                  description: Estado de activación del usuario.
               example:
-                description: "Jane Doe"
-                email: "jane.doe@example.com"
-                status: true
-      # --- END OF REQUEST BODY DOCS ---
+                description: "Usuario Actualizado"
+                email: "usuario.nuevo@example.com"
       responses:
         200:
-          description: Perfil actualizado
+          description: Perfil actualizado exitosamente. Retorna el usuario actualizado sin la contraseña.
         400:
-          description: Error de validación en los datos enviados (Bad Request)
+          description: Error de validación en los datos o error al actualizar.
         401:
-          description: No autorizado, token inválido o faltante
+          description: No autorizado.
         404:
-          description: Usuario logeado no encontrado
+          description: Usuario logueado no encontrado.
         500:
-          description: Error interno del servidor
+          description: Error interno del servidor.
       security:
         - bearerAuth: []
+
+  /recovery_password:
+    post:
+      tags:
+        - Autenticación
+      description: Inicia el proceso de recuperación de contraseña enviando un código de 6 dígitos al correo del usuario.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: Código del usuario que solicita la recuperación.
+              example:
+                code: "admin"
+      responses:
+        200:
+          description: Mensaje indicando que se ha enviado el código si el usuario existe.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Error de validación en el cuerpo de la solicitud.
+        500:
+          description: Error al procesar la solicitud de recuperación.
+    put:
+      tags:
+        - Autenticación
+      description: Restablece la contraseña utilizando el código de recuperación enviado por correo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+                - recovery_code
+                - new_password
+              properties:
+                code:
+                  type: string
+                  description: Código del usuario.
+                recovery_code:
+                  type: string
+                  minLength: 6
+                  maxLength: 6
+                  description: Código de 6 dígitos recibido por correo.
+                new_password:
+                  type: string
+                  minLength: 2
+                  description: La nueva contraseña a establecer.
+              example:
+                code: "admin"
+                recovery_code: "123456"
+                new_password: "password123"
+      responses:
+        200:
+          description: Contraseña actualizada exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Código inválido, expirado o error en los datos proporcionados.
+        500:
+          description: Error al intentar restablecer la contraseña.

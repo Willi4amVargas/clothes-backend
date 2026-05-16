@@ -23,4 +23,8 @@ export const publicRoutes: IPublicRoutes[] = [
     route: "^/api/recovery_password/?$",
     method: "POST",
   },
+  {
+    route: "^/api/recovery_password/?$",
+    method: "PUT",
+  },
 ] as const;

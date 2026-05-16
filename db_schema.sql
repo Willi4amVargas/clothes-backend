@@ -86,7 +86,9 @@ CREATE TABLE public.users (
     password character varying NOT NULL,
     description character varying,
     email character varying,
-    status boolean
+    status boolean,
+    recovery_token character varying,
+    recovery_token_expires_at timestamp
 );
 
 CREATE TABLE public.sales_operation (

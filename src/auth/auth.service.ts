@@ -2,10 +2,11 @@ import { JWTPayload, SignJWT, jwtVerify } from "jose";
 import { UsersService } from "@/users/users.service";
 import { env } from "@/config/env";
 import { User } from "@/users/models/User";
+import { verifyPassword } from "@/lib/hash.utils";
 
-interface UserPayload extends JWTPayload, User {}
+interface UserPayload extends JWTPayload, User { }
 export class AuthService {
-  constructor(private usersService: UsersService) {}
+  constructor(private usersService: UsersService) { }
 
   signIn = async (code: string, password: string): Promise<string | null> => {
     try {
@@ -14,7 +15,9 @@ export class AuthService {
         return null;
       }
 
-      if (user.password !== password) {
+      const isPasswordValid = verifyPassword(password, user.password)
+
+      if (!isPasswordValid) {
         return null;
       }
 
