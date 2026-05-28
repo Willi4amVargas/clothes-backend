@@ -1,15 +1,25 @@
 import { Router } from "express";
-import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
 
 const options: swaggerJsdoc.Options = {
+  apis: ["./src/**/*.docs.yaml"],
   definition: {
-    openapi: "3.0.0",
-    schemes: ["http"],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          bearerFormat: "JWT",
+          scheme: "bearer",
+          type: "http",
+        },
+      },
+    },
     info: {
       title: "API Tienda Comercial",
       version: "1.0.0",
     },
+    openapi: "3.0.0",
+    schemes: ["http"],
     servers: [
       {
         url: "http://localhost:5000/api/",
@@ -20,37 +30,27 @@ const options: swaggerJsdoc.Options = {
     ],
     tags: [
       {
-        name: "Autenticación",
         description: "Endpoints para manejo de sesiones y tokens JWT",
+        name: "Autenticación",
       },
       {
-        name: "Productos",
         description: "Gestión de productos y unidades",
+        name: "Productos",
       },
       {
-        name: "Inventario",
         description: "Operaciones relacionadas con el inventario",
+        name: "Inventario",
       },
       {
-        name: "Ventas",
         description: "Operaciones relacionadas con las ventas",
+        name: "Ventas",
       },
       {
-        name: "Compras",
         description: "Operaciones relacionadas con las compras",
+        name: "Compras",
       },
     ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
-      },
-    },
   },
-  apis: ["./src/**/*.docs.yaml"],
 };
 
 const router = Router();

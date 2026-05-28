@@ -1,12 +1,13 @@
 import express from "express";
 import request from "supertest";
+
 import InventoryOperationRoute from "@/inventory_operation/inventory_operation.route";
 
 jest.mock("@/containers", () => ({
   inventoryOperationController: {
+    create: (_req: any, res: any) => res.status(200).json({ id: 1 }),
     getAll: (_req: any, res: any) => res.status(200).json([]),
     getOne: (req: any, res: any) => res.status(200).json({ id: Number(req.params.id) }),
-    create: (_req: any, res: any) => res.status(200).json({ id: 1 }),
   },
 }));
 

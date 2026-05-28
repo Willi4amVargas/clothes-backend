@@ -1,14 +1,15 @@
 import express from "express";
 import request from "supertest";
+
 import ClientsRoute from "@/clients/clients.route";
 
 jest.mock("@/containers", () => ({
   clientsController: {
+    create: (_req: any, res: any) => res.status(201).json({ id: 1 }),
+    delete: (_req: any, res: any) => res.status(200).json({ ok: true }),
     getAll: (_req: any, res: any) => res.status(200).json([]),
     getOne: (req: any, res: any) => res.status(200).json({ id: Number(req.params.id) }),
-    create: (_req: any, res: any) => res.status(201).json({ id: 1 }),
     update: (_req: any, res: any) => res.status(200).json({ ok: true }),
-    delete: (_req: any, res: any) => res.status(200).json({ ok: true }),
   },
 }));
 

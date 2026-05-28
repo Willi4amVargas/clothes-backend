@@ -1,14 +1,25 @@
-import { JWTPayload, SignJWT, jwtVerify } from "jose";
-import { UsersService } from "@/users/users.service";
+import { JWTPayload, jwtVerify, SignJWT } from "jose";
+
 import { env } from "@/config/env";
-import { User } from "@/users/models/User";
 import { verifyPassword } from "@/lib/hash.utils";
+import { User } from "@/users/models/User";
+import { UsersService } from "@/users/users.service";
 
 interface UserPayload extends JWTPayload, User { }
 export class AuthService {
   constructor(private usersService: UsersService) { }
 
-  signIn = async (code: string, password: string): Promise<string | null> => {
+  static verifyToken = async (token: string): Promise<UserPayload> => {
+    try {
+      const secret = new TextEncoder().encode(env.JWT_SECRET);
+      const { payload } = await jwtVerify(token, secret);
+      const user = payload as UserPayload;
+      return user;
+    } catch (error) {
+      throw new Error("Invalid token");
+    }
+  };
+  signIn = async (code: string, password: string): Promise<null | string> => {
     try {
       const user = await this.usersService.getOne(code);
       if (!user) {
@@ -32,16 +43,6 @@ export class AuthService {
     } catch (error) {
       console.log(error);
       throw new Error("Error signing in");
-    }
-  };
-  static verifyToken = async (token: string): Promise<UserPayload> => {
-    try {
-      const secret = new TextEncoder().encode(env.JWT_SECRET);
-      const { payload } = await jwtVerify(token, secret);
-      const user = payload as UserPayload;
-      return user;
-    } catch (error) {
-      throw new Error("Invalid token");
     }
   };
 }

@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
-import { ProductsService } from "@/products/products.service";
+
 import { CreateProductDto } from "@/products/dto/create-product.dto";
 import { UpdateProductDto } from "@/products/dto/update-product.dto";
-import { ProductsUnitsService } from "@/products_units/products_units.service";
+import { ProductsService } from "@/products/products.service";
 import { ProductsStockService } from "@/products_stock/products_stock.service";
+import { ProductsUnitsService } from "@/products_units/products_units.service";
 
 export class ProductsController {
   constructor(
@@ -11,6 +12,101 @@ export class ProductsController {
     private productsUnitsService: ProductsUnitsService,
     private productsStockService: ProductsStockService,
   ) {}
+
+  create = async (req: Request, res: Response) => {
+    const isDryRun = res.locals.dry_run;
+    const CreateProductDtoParse = CreateProductDto.safeParse(req.body);
+
+    if (!CreateProductDtoParse.success) {
+      return res
+        .status(400)
+        .json({ message: CreateProductDtoParse.error?.issues });
+    }
+    const product = CreateProductDtoParse.data;
+
+    try {
+      if (isDryRun) {
+        const simulatedProduct = { ...product, id: 0 };
+        const simulatedUnits = product.products_units.map((unit, index) => ({
+          ...unit,
+          id: index + 1,
+          product_id: 0,
+        }));
+        const simulatedStock = simulatedUnits.map((unit) => ({
+          product_id: 0,
+          stock: 0,
+          unit: unit.id,
+        }));
+        return res.status(201).json({
+          ...simulatedProduct,
+          dry_run: true,
+          message:
+            "Dry run enabled: request validated and simulated without persisting changes",
+          stock: simulatedStock,
+          units: simulatedUnits,
+        });
+      }
+      const newProduct = await this.productsService.create(product);
+      const newUnits = await Promise.all(
+        product.products_units.map((unit) =>
+          this.productsUnitsService.create(newProduct.id, unit),
+        ),
+      );
+      const newStock = await Promise.all(
+        newUnits.map((unit) =>
+          this.productsStockService.create(newProduct.id, unit.id, {
+            stock: 0,
+          }),
+        ),
+      );
+      const result = { ...newProduct, stock: newStock, units: newUnits };
+      res.status(201).json(result);
+    } catch (error: any) {
+      if (error.message) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Error creating product" });
+    }
+  };
+
+  delete = async (req: Request, res: Response) => {
+    const isDryRun = res.locals.dry_run;
+    const { id } = req.params;
+    if (!id || typeof id !== "string") {
+      res.status(400).json({ message: "Invalid product code" });
+      return;
+    }
+    if (Number.isNaN(+id)) {
+      res.status(400).json({ message: "id is not a number" });
+      return;
+    }
+
+    if (+id <= 0) {
+      res.status(400).json({ message: "id can't be less or equal to 0" });
+      return;
+    }
+
+    try {
+      if (isDryRun) {
+        const existingProduct = await this.productsService.getOne(+id);
+        if (!existingProduct) {
+          return res.status(404).json({ message: "Product not found" });
+        }
+        return res.json({
+          dry_run: true,
+          message:
+            "Dry run enabled: delete validated and simulated without persisting changes",
+        });
+      }
+      await this.productsService.delete(+id);
+      res.json({ message: "Product deleted successfully" });
+    } catch (error: any) {
+      if (error.message) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Error deleting product" });
+    }
+  };
 
   getAll = async (_: Request, res: Response) => {
     try {
@@ -51,8 +147,8 @@ export class ProductsController {
 
       const result = {
         ...product,
-        units,
         stock,
+        units,
       };
 
       return res.json(result);
@@ -61,62 +157,6 @@ export class ProductsController {
         return res.status(500).json({ message: error.message });
       }
       return res.status(500).json({ message: "Error fetching product" });
-    }
-  };
-
-  create = async (req: Request, res: Response) => {
-    const isDryRun = res.locals.dry_run;
-    const CreateProductDtoParse = CreateProductDto.safeParse(req.body);
-
-    if (!CreateProductDtoParse.success) {
-      return res
-        .status(400)
-        .json({ message: CreateProductDtoParse.error?.issues });
-    }
-    const product = CreateProductDtoParse.data;
-
-    try {
-      if (isDryRun) {
-        const simulatedProduct = { ...product, id: 0 };
-        const simulatedUnits = product.products_units.map((unit, index) => ({
-          ...unit,
-          id: index + 1,
-          product_id: 0,
-        }));
-        const simulatedStock = simulatedUnits.map((unit) => ({
-          product_id: 0,
-          unit: unit.id,
-          stock: 0,
-        }));
-        return res.status(201).json({
-          ...simulatedProduct,
-          units: simulatedUnits,
-          stock: simulatedStock,
-          dry_run: true,
-          message:
-            "Dry run enabled: request validated and simulated without persisting changes",
-        });
-      }
-      const newProduct = await this.productsService.create(product);
-      const newUnits = await Promise.all(
-        product.products_units.map((unit) =>
-          this.productsUnitsService.create(newProduct.id, unit),
-        ),
-      );
-      const newStock = await Promise.all(
-        newUnits.map((unit) =>
-          this.productsStockService.create(newProduct.id, unit.id, {
-            stock: 0,
-          }),
-        ),
-      );
-      const result = { ...newProduct, units: newUnits, stock: newStock };
-      res.status(201).json(result);
-    } catch (error: any) {
-      if (error.message) {
-        return res.status(400).json({ message: error.message });
-      }
-      res.status(500).json({ message: "Error creating product" });
     }
   };
 
@@ -157,10 +197,10 @@ export class ProductsController {
         return res.status(201).json({
           ...existingProduct,
           ...product,
-          products_units: simulatedProductUnits,
           dry_run: true,
           message:
             "Dry run enabled: request validated and simulated without persisting changes",
+          products_units: simulatedProductUnits,
         });
       }
       const updatedProduct = await this.productsService.update(+id, product);
@@ -181,45 +221,6 @@ export class ProductsController {
       } else {
         res.status(500).json({ message: "Error updating product" });
       }
-    }
-  };
-
-  delete = async (req: Request, res: Response) => {
-    const isDryRun = res.locals.dry_run;
-    const { id } = req.params;
-    if (!id || typeof id !== "string") {
-      res.status(400).json({ message: "Invalid product code" });
-      return;
-    }
-    if (Number.isNaN(+id)) {
-      res.status(400).json({ message: "id is not a number" });
-      return;
-    }
-
-    if (+id <= 0) {
-      res.status(400).json({ message: "id can't be less or equal to 0" });
-      return;
-    }
-
-    try {
-      if (isDryRun) {
-        const existingProduct = await this.productsService.getOne(+id);
-        if (!existingProduct) {
-          return res.status(404).json({ message: "Product not found" });
-        }
-        return res.json({
-          message:
-            "Dry run enabled: delete validated and simulated without persisting changes",
-          dry_run: true,
-        });
-      }
-      await this.productsService.delete(+id);
-      res.json({ message: "Product deleted successfully" });
-    } catch (error: any) {
-      if (error.message) {
-        return res.status(400).json({ message: error.message });
-      }
-      res.status(500).json({ message: "Error deleting product" });
     }
   };
 }

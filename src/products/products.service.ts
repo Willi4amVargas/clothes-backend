@@ -1,37 +1,10 @@
 import { Pool } from "pg";
+
 import { Product } from "@/products/models/Product";
 
 export class ProductsService {
   constructor(private repository: Pool) {}
 
-  getAll = async (): Promise<Product[]> => {
-    try {
-      const result = await this.repository.query("SELECT * FROM products");
-      return result.rows;
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error fetching products");
-    }
-  };
-  getOne = async (id: number): Promise<Product | null> => {
-    try {
-      const result = await this.repository.query(
-        "SELECT * FROM products WHERE id = $1::numeric",
-        [id],
-      );
-      if (result.rows.length <= 0) {
-        return null;
-      }
-      return result.rows[0];
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error fetching product");
-    }
-  };
   create = async (product: Omit<Product, "id">): Promise<Product> => {
     try {
       const result = await this.repository.query(
@@ -60,6 +33,52 @@ export class ProductsService {
         throw new Error(error.message);
       }
       throw new Error("Error creating product");
+    }
+  };
+  delete = async (id: number): Promise<void> => {
+    try {
+      const existingProduct = await this.getOne(id);
+      if (!existingProduct) {
+        throw new Error("Product not found");
+      }
+      await this.repository.query(
+        "DELETE FROM products WHERE id = $1::numeric",
+        [id],
+      );
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error deleting product");
+    }
+  };
+  getAll = async (): Promise<Product[]> => {
+    try {
+      const result = await this.repository.query("SELECT * FROM products");
+      return result.rows;
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error fetching products");
+    }
+  };
+
+  getOne = async (id: number): Promise<null | Product> => {
+    try {
+      const result = await this.repository.query(
+        "SELECT * FROM products WHERE id = $1::numeric",
+        [id],
+      );
+      if (result.rows.length <= 0) {
+        return null;
+      }
+      return result.rows[0];
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error fetching product");
     }
   };
 
@@ -100,24 +119,6 @@ export class ProductsService {
         throw new Error(error.message);
       }
       throw new Error("Error updating product");
-    }
-  };
-
-  delete = async (id: number): Promise<void> => {
-    try {
-      const existingProduct = await this.getOne(id);
-      if (!existingProduct) {
-        throw new Error("Product not found");
-      }
-      await this.repository.query(
-        "DELETE FROM products WHERE id = $1::numeric",
-        [id],
-      );
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error deleting product");
     }
   };
 }

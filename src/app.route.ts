@@ -1,4 +1,5 @@
 import { Router } from "express";
+
 import { appController } from "@/containers";
 
 export const route = Router();

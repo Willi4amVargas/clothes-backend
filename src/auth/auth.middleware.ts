@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+
 import { AuthService } from "@/auth/auth.service";
 import { publicRoutes } from "@/config/publicRoutes";
 
@@ -7,14 +8,14 @@ export const verifyToken = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { path, method } = req;
+  const { method, path } = req;
   const isPublicRoute = publicRoutes.some(publicRoute => {
     const routeRegExp = new RegExp(publicRoute.route);
     return publicRoute.method.toLowerCase() === method.toLowerCase() && routeRegExp.test(path);
   });
 
   if (isPublicRoute) {
-    return next();
+    next(); return;
   }
 
   const authHeader = req.headers.authorization;
@@ -25,8 +26,8 @@ export const verifyToken = async (
   try {
     const payload = await AuthService.verifyToken(token);
     res.locals.user = payload;
-    return next();
-  } catch (error) {
+    next(); return;
+  } catch {
     res.status(401).json({ message: "Invalid token" });
   }
 };

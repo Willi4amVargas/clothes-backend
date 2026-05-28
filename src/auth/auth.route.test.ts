@@ -1,5 +1,6 @@
 import express from "express";
 import request from "supertest";
+
 import AuthRoute from "@/auth/auth.route";
 
 jest.mock("@/containers", () => ({

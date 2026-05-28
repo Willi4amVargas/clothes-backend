@@ -1,49 +1,13 @@
 import { Pool } from "pg";
-import { ProductUnit } from "@/products_units/models/ProductUnit";
+
 import { ProductsService } from "@/products/products.service";
+import { ProductUnit } from "@/products_units/models/ProductUnit";
 
 export class ProductsUnitsService {
   constructor(
     private repository: Pool,
     private productsService: ProductsService,
   ) {}
-
-  getAll = async (product_id: number): Promise<ProductUnit[]> => {
-    try {
-      const result = await this.repository.query(
-        "SELECT * FROM products_units WHERE product_id = $1::numeric",
-        [product_id],
-      );
-      return result.rows;
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error getting product units: ");
-    }
-  };
-
-  getOne = async (
-    product_id: number,
-    id: number,
-  ): Promise<ProductUnit | null> => {
-    try {
-      const result = await this.repository.query(
-        "SELECT * FROM products_units WHERE product_id = $1::numeric AND id = $2::numeric",
-        [product_id, id],
-      );
-      if (result.rows.length <= 0) {
-        return null;
-      }
-
-      return result.rows[0];
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error getting product unit");
-    }
-  };
 
   create = async (
     product_id: number,
@@ -68,6 +32,57 @@ export class ProductsUnitsService {
         throw new Error(error.message);
       }
       throw new Error("Error creating product unit");
+    }
+  };
+
+  delete = async (product_id: number, id: number): Promise<void> => {
+    try {
+      await this.repository.query(
+        "DELETE FROM products_units WHERE product_id = $1::numeric AND id = $2::numeric",
+        [product_id, id],
+      );
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error deleting product unit");
+    }
+  };
+
+  getAll = async (product_id: number): Promise<ProductUnit[]> => {
+    try {
+      const result = await this.repository.query(
+        "SELECT * FROM products_units WHERE product_id = $1::numeric",
+        [product_id],
+      );
+      return result.rows;
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error getting product units: ");
+    }
+  };
+
+  getOne = async (
+    product_id: number,
+    id: number,
+  ): Promise<null | ProductUnit> => {
+    try {
+      const result = await this.repository.query(
+        "SELECT * FROM products_units WHERE product_id = $1::numeric AND id = $2::numeric",
+        [product_id, id],
+      );
+      if (result.rows.length <= 0) {
+        return null;
+      }
+
+      return result.rows[0];
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error getting product unit");
     }
   };
 
@@ -110,20 +125,6 @@ export class ProductsUnitsService {
         throw new Error(error.message);
       }
       throw new Error("Error updating product unit");
-    }
-  };
-
-  delete = async (product_id: number, id: number): Promise<void> => {
-    try {
-      await this.repository.query(
-        "DELETE FROM products_units WHERE product_id = $1::numeric AND id = $2::numeric",
-        [product_id, id],
-      );
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error deleting product unit");
     }
   };
 }

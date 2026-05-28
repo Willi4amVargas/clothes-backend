@@ -1,13 +1,13 @@
 export interface InventoryOperationDetails {
-  main_id: number;
-  line: number;
-  product_id: number;
-  description_product: string;
-  amount: number;
-  unit: number;
-  unitary_cost: number;
   aliquot: number;
+  amount: number;
+  description_product: string;
+  line: number;
+  main_id: number;
+  product_id: number;
+  total: number;
   total_cost: number;
   total_tax: number;
-  total: number;
+  unit: number;
+  unitary_cost: number;
 }

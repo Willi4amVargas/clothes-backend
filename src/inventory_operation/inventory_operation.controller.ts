@@ -1,10 +1,11 @@
+import { Request, Response } from "express";
+
+import { CreateInventoryOperationDto } from "@/inventory_operation/dto/create-inventory-operation.dto";
 import { InventoryOperationService } from "@/inventory_operation/inventory_operation.service";
 import { InventoryOperationDetailsService } from "@/inventory_operation_details/inventory_operation_details.service";
-import { Request, Response } from "express";
-import { CreateInventoryOperationDto } from "@/inventory_operation/dto/create-inventory-operation.dto";
 import { ProductsService } from "@/products/products.service";
-import { ProductsUnitsService } from "@/products_units/products_units.service";
 import { ProductsStockService } from "@/products_stock/products_stock.service";
+import { ProductsUnitsService } from "@/products_units/products_units.service";
 
 export class InventoryOperationController {
   constructor(
@@ -14,57 +15,6 @@ export class InventoryOperationController {
     private productsUnitsService: ProductsUnitsService,
     private productStockService: ProductsStockService,
   ) {}
-
-  getAll = async (_: Request, res: Response) => {
-    try {
-      const inventoryOperations = await this.inventoryOperationService.getAll();
-      return res.json(inventoryOperations);
-    } catch (error: any) {
-      if (error.message) {
-        return res.status(500).json({ message: error.message });
-      }
-      res.status(500).json({ message: "Error fetching InventoryOperations" });
-    }
-  };
-
-  getOne = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    if (!id || typeof id !== "string") {
-      res.status(400).json({ message: "Invalid id number" });
-      return;
-    }
-
-    if (Number.isNaN(+id)) {
-      res.status(400).json({ message: "id is not a number" });
-      return;
-    }
-
-    if (+id <= 0) {
-      res.status(400).json({ message: "id can't be less or equal to 0" });
-      return;
-    }
-    try {
-      const inventoryOperation =
-        await this.inventoryOperationService.getOne(+id);
-      if (!inventoryOperation) {
-        res.status(404).json({ message: "Inventory operation dont exist" });
-        return;
-      }
-
-      const inventoryOperationDetails =
-        await this.inventoryOperationDetailsService.getAll(+id);
-      const result = {
-        ...inventoryOperation,
-        inventory_operation_details: inventoryOperationDetails,
-      };
-      return res.json(result);
-    } catch (error: any) {
-      if (error.message) {
-        return res.status(500).json({ message: error.message });
-      }
-      res.status(500).json({ message: "Error fetching InventoryOperation" });
-    }
-  };
 
   create = async (req: Request, res: Response) => {
     const isDryRun = res.locals.dry_run;
@@ -127,9 +77,9 @@ export class InventoryOperationController {
         const finalDetail = {
           ...iod,
           ...resultTotals,
+          aliquot: product.buy_tax,
           description_product: product.description,
           unitary_cost: unit.cost,
-          aliquot: product.buy_tax,
         };
 
         newInventoryOperationDetails.push(finalDetail);
@@ -142,10 +92,10 @@ export class InventoryOperationController {
         });
       const document_no = await this.inventoryOperationService.getDocumentNo();
       const newInventoryOperation = {
-        document_no,
-        user_id: res.locals.user.id,
-        operation_type: inventoryOperation.operation_type,
         description: inventoryOperation.description,
+        document_no,
+        operation_type: inventoryOperation.operation_type,
+        user_id: res.locals.user.id,
         ...inventoryOperationTotals,
         inventory_operation_details: newInventoryOperationDetails,
       };
@@ -153,8 +103,8 @@ export class InventoryOperationController {
       if (isDryRun) {
         return res.json({
           ...newInventoryOperation,
-          inventory_operation_details: newInventoryOperationDetails,
           dry_run: true,
+          inventory_operation_details: newInventoryOperationDetails,
           message:
             "Dry run enabled: request validated and simulated without persisting changes",
         });
@@ -207,6 +157,57 @@ export class InventoryOperationController {
         return res.status(500).json({ message: error.message });
       }
       res.status(500).json({ message: "Error creating InventoryOperation" });
+    }
+  };
+
+  getAll = async (_: Request, res: Response) => {
+    try {
+      const inventoryOperations = await this.inventoryOperationService.getAll();
+      return res.json(inventoryOperations);
+    } catch (error: any) {
+      if (error.message) {
+        return res.status(500).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Error fetching InventoryOperations" });
+    }
+  };
+
+  getOne = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    if (!id || typeof id !== "string") {
+      res.status(400).json({ message: "Invalid id number" });
+      return;
+    }
+
+    if (Number.isNaN(+id)) {
+      res.status(400).json({ message: "id is not a number" });
+      return;
+    }
+
+    if (+id <= 0) {
+      res.status(400).json({ message: "id can't be less or equal to 0" });
+      return;
+    }
+    try {
+      const inventoryOperation =
+        await this.inventoryOperationService.getOne(+id);
+      if (!inventoryOperation) {
+        res.status(404).json({ message: "Inventory operation dont exist" });
+        return;
+      }
+
+      const inventoryOperationDetails =
+        await this.inventoryOperationDetailsService.getAll(+id);
+      const result = {
+        ...inventoryOperation,
+        inventory_operation_details: inventoryOperationDetails,
+      };
+      return res.json(result);
+    } catch (error: any) {
+      if (error.message) {
+        return res.status(500).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Error fetching InventoryOperation" });
     }
   };
 

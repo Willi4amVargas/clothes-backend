@@ -1,5 +1,6 @@
 import express from "express";
 import request from "supertest";
+
 import SwaggerRoute from "@/swagger/swagger.route";
 
 describe("swagger.route", () => {

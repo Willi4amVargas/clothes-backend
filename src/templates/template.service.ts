@@ -1,6 +1,6 @@
-import path from "path";
 import { readFile } from "fs/promises";
 import { compile } from "handlebars";
+import path from "path";
 
 export class TemplateService {
   private templatesPath: string;

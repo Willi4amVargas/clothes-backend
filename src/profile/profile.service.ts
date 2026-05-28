@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+
 import { Profile } from "@/profile/models/Profile";
 
 export class ProfileService {
@@ -13,7 +14,7 @@ export class ProfileService {
     }
   };
 
-  getOne = async (code: string): Promise<Profile | null> => {
+  getOne = async (code: string): Promise<null | Profile> => {
     try {
       const result = await this.repository.query(
         "SELECT * FROM profiles WHERE code = $1::text",

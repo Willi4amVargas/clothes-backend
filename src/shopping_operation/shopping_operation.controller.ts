@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
-import { ShoppingOperationService } from "@/shopping_operation/shopping_operation.service";
-import { CreateShoppingOperationDto } from "@/shopping_operation/dto/create-shopping-operation.dto";
-import { ShoppingOperationDetailsService } from "@/shopping_operation_details/shopping_operation_details.service";
+
 import { ProductsService } from "@/products/products.service";
-import { ProductsUnitsService } from "@/products_units/products_units.service";
 import { ProductsStockService } from "@/products_stock/products_stock.service";
-import { ShoppingOperationDetail } from "@/shopping_operation_details/models/ShoppingOperationDetail";
+import { ProductsUnitsService } from "@/products_units/products_units.service";
+import { CreateShoppingOperationDto } from "@/shopping_operation/dto/create-shopping-operation.dto";
 import { ShoppingOperation } from "@/shopping_operation/models/ShoppingOperation";
+import { ShoppingOperationService } from "@/shopping_operation/shopping_operation.service";
+import { ShoppingOperationDetail } from "@/shopping_operation_details/models/ShoppingOperationDetail";
+import { ShoppingOperationDetailsService } from "@/shopping_operation_details/shopping_operation_details.service";
 
 export class ShoppingOperationController {
   constructor(
@@ -16,6 +17,161 @@ export class ShoppingOperationController {
     private productsUnitsService: ProductsUnitsService,
     private productsStockService: ProductsStockService,
   ) {}
+
+  create = async (req: Request, res: Response) => {
+    const createShoppingOperationDtoParse =
+      CreateShoppingOperationDto.safeParse(req.body);
+    if (!createShoppingOperationDtoParse.success) {
+      return res
+        .status(400)
+        .json({ message: createShoppingOperationDtoParse.error?.issues });
+    }
+
+    const shoppingOperation = createShoppingOperationDtoParse.data;
+    const isDryRun = res.locals.dry_run;
+
+    try {
+      const products = await Promise.all(
+        shoppingOperation.shopping_operation_details.map((sod) =>
+          this.productsService.getOne(sod.product_id),
+        ),
+      );
+      if (products.includes(null)) {
+        return res.status(404).json({ message: "Some products dont exist" });
+      }
+
+      const units = await Promise.all(
+        shoppingOperation.shopping_operation_details.map((sod) =>
+          this.productsUnitsService.getOne(sod.product_id, sod.unit),
+        ),
+      );
+      if (units.includes(null)) {
+        return res.status(404).json({ message: "Some units dont exist" });
+      }
+
+      const newShoppingOperationDetails: Omit<
+        ShoppingOperationDetail,
+        "line" | "main_id"
+      >[] = [];
+      for (
+        let i = 0;
+        i < shoppingOperation.shopping_operation_details.length;
+        i++
+      ) {
+        const detail = shoppingOperation.shopping_operation_details[i];
+        const product = products.find((p) => p?.id === detail.product_id);
+        const unit = units.find((u) => u?.id === detail.unit);
+
+        if (!product || !unit) {
+          throw new Error("Error getting product or unit for calculate totals");
+        }
+
+        const totals = this.shoppingOperationDetailsService.calculateTotals(
+          unit.cost,
+          detail.amount,
+          product.buy_tax,
+        );
+
+        newShoppingOperationDetails.push({
+          amount: detail.amount,
+          buy_aliquot: product.buy_tax,
+          description_product: product.description,
+          product_id: product.id,
+          total: totals.total,
+          total_net: totals.total_net,
+          total_tax: totals.total_tax,
+          unit: unit.id,
+          unitary_cost: unit.cost,
+        });
+      }
+
+      const totals = this.shoppingOperationService.calculateTotals(
+        newShoppingOperationDetails,
+      );
+
+      if (shoppingOperation.credit > totals.total) {
+        return res
+          .status(400)
+          .json({ message: "Credit cant be more than total" });
+      }
+      if (shoppingOperation.cash > totals.total) {
+        return res
+          .status(400)
+          .json({ message: "Cash cant be more than total" });
+      }
+      if (shoppingOperation.credit + shoppingOperation.cash > totals.total) {
+        return res
+          .status(400)
+          .json({ message: "Credit + Cash cant be more than total" });
+      }
+
+      const documentNo = await this.shoppingOperationService.getDocumentNo();
+      const newShoppingOperation: Omit<
+        ShoppingOperation,
+        "emission_date" | "id"
+      > = {
+        cash: shoppingOperation.cash,
+        credit: shoppingOperation.credit,
+        description: shoppingOperation.description,
+        document_no: documentNo,
+        operation_type: shoppingOperation.operation_type,
+        pending: shoppingOperation.pending,
+        total: totals.total,
+        total_amount: totals.total_amount,
+        total_count_details:
+          shoppingOperation.shopping_operation_details.length,
+        total_net: totals.total_net,
+        total_tax: totals.total_tax,
+        user_id: res.locals.user.id,
+      };
+
+      if (isDryRun) {
+        return res.json({
+          ...newShoppingOperation,
+          dry_run: true,
+          message:
+            "Dry run enabled: request validated and simulated without persisting changes",
+          shopping_operation_details: newShoppingOperationDetails,
+        });
+      }
+
+      const createdShoppingOperation =
+        await this.shoppingOperationService.create(newShoppingOperation);
+      const createdShoppingOperationDetails = await Promise.all(
+        newShoppingOperationDetails.map((sod) =>
+          this.shoppingOperationDetailsService.create(
+            createdShoppingOperation.id,
+            sod,
+          ),
+        ),
+      );
+
+      if (shoppingOperation.operation_type === "SHOPPING") {
+        await Promise.all(
+          shoppingOperation.shopping_operation_details.map((sod) =>
+            this.productsStockService.update(
+              sod.product_id,
+              sod.unit,
+              {
+                stock: sod.amount,
+              },
+              true,
+            ),
+          ),
+        );
+      }
+
+      return res.json({
+        ...createdShoppingOperation,
+        shopping_operation_details: createdShoppingOperationDetails,
+      });
+    } catch (error: any) {
+      if (error.message) {
+        return res.status(500).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Error creating ShoppingOperation" });
+    }
+  };
 
   getAll = async (_: Request, res: Response) => {
     try {
@@ -66,161 +222,6 @@ export class ShoppingOperationController {
         return res.status(500).json({ message: error.message });
       }
       res.status(500).json({ message: "Error getting ShoppingOperation" });
-    }
-  };
-
-  create = async (req: Request, res: Response) => {
-    const createShoppingOperationDtoParse =
-      CreateShoppingOperationDto.safeParse(req.body);
-    if (!createShoppingOperationDtoParse.success) {
-      return res
-        .status(400)
-        .json({ message: createShoppingOperationDtoParse.error?.issues });
-    }
-
-    const shoppingOperation = createShoppingOperationDtoParse.data;
-    const isDryRun = res.locals.dry_run;
-
-    try {
-      const products = await Promise.all(
-        shoppingOperation.shopping_operation_details.map((sod) =>
-          this.productsService.getOne(sod.product_id),
-        ),
-      );
-      if (products.includes(null)) {
-        return res.status(404).json({ message: "Some products dont exist" });
-      }
-
-      const units = await Promise.all(
-        shoppingOperation.shopping_operation_details.map((sod) =>
-          this.productsUnitsService.getOne(sod.product_id, sod.unit),
-        ),
-      );
-      if (units.includes(null)) {
-        return res.status(404).json({ message: "Some units dont exist" });
-      }
-
-      const newShoppingOperationDetails: Omit<
-        ShoppingOperationDetail,
-        "main_id" | "line"
-      >[] = [];
-      for (
-        let i = 0;
-        i < shoppingOperation.shopping_operation_details.length;
-        i++
-      ) {
-        const detail = shoppingOperation.shopping_operation_details[i];
-        const product = products.find((p) => p?.id === detail.product_id);
-        const unit = units.find((u) => u?.id === detail.unit);
-
-        if (!product || !unit) {
-          throw new Error("Error getting product or unit for calculate totals");
-        }
-
-        const totals = this.shoppingOperationDetailsService.calculateTotals(
-          unit.cost,
-          detail.amount,
-          product.buy_tax,
-        );
-
-        newShoppingOperationDetails.push({
-          product_id: product.id,
-          description_product: product.description,
-          amount: detail.amount,
-          unit: unit.id,
-          unitary_cost: unit.cost,
-          buy_aliquot: product.buy_tax,
-          total_net: totals.total_net,
-          total_tax: totals.total_tax,
-          total: totals.total,
-        });
-      }
-
-      const totals = this.shoppingOperationService.calculateTotals(
-        newShoppingOperationDetails,
-      );
-
-      if (shoppingOperation.credit > totals.total) {
-        return res
-          .status(400)
-          .json({ message: "Credit cant be more than total" });
-      }
-      if (shoppingOperation.cash > totals.total) {
-        return res
-          .status(400)
-          .json({ message: "Cash cant be more than total" });
-      }
-      if (shoppingOperation.credit + shoppingOperation.cash > totals.total) {
-        return res
-          .status(400)
-          .json({ message: "Credit + Cash cant be more than total" });
-      }
-
-      const documentNo = await this.shoppingOperationService.getDocumentNo();
-      const newShoppingOperation: Omit<
-        ShoppingOperation,
-        "id" | "emission_date"
-      > = {
-        operation_type: shoppingOperation.operation_type,
-        document_no: documentNo,
-        description: shoppingOperation.description,
-        user_id: res.locals.user.id,
-        total_amount: totals.total_amount,
-        total_net: totals.total_net,
-        total_tax: totals.total_tax,
-        total: totals.total,
-        credit: shoppingOperation.credit,
-        cash: shoppingOperation.cash,
-        total_count_details:
-          shoppingOperation.shopping_operation_details.length,
-        pending: shoppingOperation.pending,
-      };
-
-      if (isDryRun) {
-        return res.json({
-          ...newShoppingOperation,
-          shopping_operation_details: newShoppingOperationDetails,
-          dry_run: true,
-          message:
-            "Dry run enabled: request validated and simulated without persisting changes",
-        });
-      }
-
-      const createdShoppingOperation =
-        await this.shoppingOperationService.create(newShoppingOperation);
-      const createdShoppingOperationDetails = await Promise.all(
-        newShoppingOperationDetails.map((sod) =>
-          this.shoppingOperationDetailsService.create(
-            createdShoppingOperation.id,
-            sod,
-          ),
-        ),
-      );
-
-      if (shoppingOperation.operation_type === "SHOPPING") {
-        await Promise.all(
-          shoppingOperation.shopping_operation_details.map((sod) =>
-            this.productsStockService.update(
-              sod.product_id,
-              sod.unit,
-              {
-                stock: sod.amount,
-              },
-              true,
-            ),
-          ),
-        );
-      }
-
-      return res.json({
-        ...createdShoppingOperation,
-        shopping_operation_details: createdShoppingOperationDetails,
-      });
-    } catch (error: any) {
-      if (error.message) {
-        return res.status(500).json({ message: error.message });
-      }
-      res.status(500).json({ message: "Error creating ShoppingOperation" });
     }
   };
 }

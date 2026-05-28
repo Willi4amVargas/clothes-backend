@@ -3,8 +3,9 @@
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import perfectionist from "eslint-plugin-perfectionist";
+import { defineConfig } from "eslint/config";
 
-export default tseslint.config(
+export default defineConfig(
   {
     ignores: ["**/*.js"],
   },

@@ -1,55 +1,29 @@
 import { Pool } from "pg";
+
 import { ShoppingOperationDetail } from "@/shopping_operation_details/models/ShoppingOperationDetail";
 
 export class ShoppingOperationDetailsService {
   constructor(private repository: Pool) {}
 
-  getAll = async (main_id: number): Promise<ShoppingOperationDetail[] | null> => {
-    try {
-      const result = await this.repository.query(
-        "SELECT * FROM shopping_operation_details WHERE main_id = $1::numeric",
-        [main_id],
-      );
+  calculateTotals = (
+    unitary_cost: number,
+    amount: number,
+    buy_aliquot: number,
+  ): {
+    total: number;
+    total_net: number;
+    total_tax: number;
+  } => {
+    const total_net = unitary_cost * amount;
+    const total_tax = (total_net * buy_aliquot) / 100;
+    const total = total_net + total_tax;
 
-      if (result.rows.length <= 0) {
-        return null;
-      }
-
-      return result.rows;
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error getting ShoppingOperationDetails");
-    }
-  };
-
-  getOne = async (
-    main_id: number,
-    line: number,
-  ): Promise<ShoppingOperationDetail | null> => {
-    try {
-      const result = await this.repository.query(
-        "SELECT * FROM shopping_operation_details WHERE main_id = $1::numeric AND line = $2::numeric",
-        [main_id, line],
-      );
-
-      if (result.rows.length <= 0) {
-        return null;
-      }
-
-      return result.rows[0];
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error getting ShoppingOperationDetail");
-    }
+    return { total, total_net, total_tax };
   };
 
   create = async (
     main_id: number,
-    shoppingOperationDetail: Omit<ShoppingOperationDetail, "main_id" | "line">,
+    shoppingOperationDetail: Omit<ShoppingOperationDetail, "line" | "main_id">,
   ): Promise<ShoppingOperationDetail> => {
     try {
       const result = await this.repository.query(
@@ -77,19 +51,46 @@ export class ShoppingOperationDetailsService {
     }
   };
 
-  calculateTotals = (
-    unitary_cost: number,
-    amount: number,
-    buy_aliquot: number,
-  ): {
-    total_net: number;
-    total_tax: number;
-    total: number;
-  } => {
-    const total_net = unitary_cost * amount;
-    const total_tax = (total_net * buy_aliquot) / 100;
-    const total = total_net + total_tax;
+  getAll = async (main_id: number): Promise<null | ShoppingOperationDetail[]> => {
+    try {
+      const result = await this.repository.query(
+        "SELECT * FROM shopping_operation_details WHERE main_id = $1::numeric",
+        [main_id],
+      );
 
-    return { total_net, total_tax, total };
+      if (result.rows.length <= 0) {
+        return null;
+      }
+
+      return result.rows;
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error getting ShoppingOperationDetails");
+    }
+  };
+
+  getOne = async (
+    main_id: number,
+    line: number,
+  ): Promise<null | ShoppingOperationDetail> => {
+    try {
+      const result = await this.repository.query(
+        "SELECT * FROM shopping_operation_details WHERE main_id = $1::numeric AND line = $2::numeric",
+        [main_id, line],
+      );
+
+      if (result.rows.length <= 0) {
+        return null;
+      }
+
+      return result.rows[0];
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error getting ShoppingOperationDetail");
+    }
   };
 }

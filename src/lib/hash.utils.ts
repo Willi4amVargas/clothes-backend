@@ -1,4 +1,4 @@
-import { scryptSync, randomBytes, timingSafeEqual, createHash } from "node:crypto";
+import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 
 /**
  * Hashes a password using scrypt.

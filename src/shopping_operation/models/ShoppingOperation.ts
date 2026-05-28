@@ -1,16 +1,16 @@
 export interface ShoppingOperation {
-  id: number;
-  operation_type: string;
+  cash: number;
+  credit: number;
+  description: string;
   document_no: string;
   emission_date: string;
-  description: string;
-  user_id: number;
+  id: number;
+  operation_type: string;
+  pending: boolean;
+  total: number;
   total_amount: number;
+  total_count_details: number;
   total_net: number;
   total_tax: number;
-  total: number;
-  credit: number;
-  cash: number;
-  total_count_details: number;
-  pending: boolean;
+  user_id: number;
 }

@@ -1,46 +1,77 @@
 import { Pool } from "pg";
-import { SalesOperation } from "@/sales_operation/models/SalesOperation";
+
 import { DateUtils } from "@/lib/date.utils";
+import { SalesOperation } from "@/sales_operation/models/SalesOperation";
 
 export class SalesOperationService {
   constructor(private repository: Pool) {}
 
-  getAll = async (): Promise<SalesOperation[]> => {
-    try {
-      const result = await this.repository.query(
-        "SELECT * FROM sales_operation",
-      );
+  calculateCostTotals = (
+    details_cost_totals: {
+      total_cost: number;
+      total_net_cost: number;
+      total_tax_cost: number;
+    }[],
+  ): {
+    total_cost: number;
+    total_net_cost: number;
+    total_tax_cost: number;
+  } => {
+    const totalsCost = {
+      total_cost: 0,
+      total_net_cost: 0,
+      total_tax_cost: 0,
+    };
 
-      return result.rows;
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error getting SalesOperation");
+    for (let i = 0; i < details_cost_totals.length; i++) {
+      const detail_cost_totals = details_cost_totals[i];
+      totalsCost.total_net_cost += detail_cost_totals.total_net_cost;
+      totalsCost.total_tax_cost += detail_cost_totals.total_tax_cost;
+      totalsCost.total_cost += detail_cost_totals.total_cost;
     }
+    return totalsCost;
   };
 
-  getOne = async (id: number): Promise<SalesOperation | null> => {
-    try {
-      const result = await this.repository.query(
-        "SELECT * FROM sales_operation WHERE id = $1::numeric",
-        [id],
-      );
-      if (result.rows.length <= 0) {
-        return null;
-      }
+  calculateTotals = (
+    percent_discount: number,
+    details_totals: {
+      discount: number;
+      total: number;
+      total_net: number;
+      total_tax: number;
+    }[],
+  ): {
+    discount: number;
+    total: number;
+    total_exempt: number;
+    total_net: number;
+    total_tax: number;
+  } => {
+    const totals = {
+      discount: 0,
+      total: 0,
+      total_exempt: 0,
+      total_net: 0,
+      total_tax: 0,
+    };
 
-      return result.rows[0];
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
+    for (let i = 0; i < details_totals.length; i++) {
+      const detail_totals = details_totals[i];
+      totals.total_net += detail_totals.total_net;
+      totals.total_tax += detail_totals.total_tax;
+      // for now we do this, later we can add a property o do in other way
+      if (detail_totals.total_tax == 0) {
+        totals.total_exempt += detail_totals.total_net;
       }
-      throw new Error("Error getting SalesOperation");
+      totals.total += detail_totals.total;
     }
+    // for now is not posible add discount to the general sale
+    // totals.discount = (totals.total_net * percent_discount) / 100;
+    return totals;
   };
 
   create = async (
-    sales_operation: Omit<SalesOperation, "id" | "emission_date">,
+    sales_operation: Omit<SalesOperation, "emission_date" | "id">,
   ): Promise<SalesOperation> => {
     try {
       const actualDate = new Date();
@@ -82,68 +113,19 @@ export class SalesOperationService {
     }
   };
 
-  calculateCostTotals = (
-    details_cost_totals: {
-      total_net_cost: number;
-      total_tax_cost: number;
-      total_cost: number;
-    }[],
-  ): {
-    total_net_cost: number;
-    total_tax_cost: number;
-    total_cost: number;
-  } => {
-    const totalsCost = {
-      total_net_cost: 0,
-      total_tax_cost: 0,
-      total_cost: 0,
-    };
+  getAll = async (): Promise<SalesOperation[]> => {
+    try {
+      const result = await this.repository.query(
+        "SELECT * FROM sales_operation",
+      );
 
-    for (let i = 0; i < details_cost_totals.length; i++) {
-      const detail_cost_totals = details_cost_totals[i];
-      totalsCost.total_net_cost += detail_cost_totals.total_net_cost;
-      totalsCost.total_tax_cost += detail_cost_totals.total_tax_cost;
-      totalsCost.total_cost += detail_cost_totals.total_cost;
-    }
-    return totalsCost;
-  };
-
-  calculateTotals = (
-    percent_discount: number,
-    details_totals: {
-      discount: number;
-      total_net: number;
-      total_tax: number;
-      total: number;
-    }[],
-  ): {
-    discount: number;
-    total_net: number;
-    total_exempt: number;
-    total_tax: number;
-    total: number;
-  } => {
-    const totals = {
-      discount: 0,
-      total_net: 0,
-      total_exempt: 0,
-      total_tax: 0,
-      total: 0,
-    };
-
-    for (let i = 0; i < details_totals.length; i++) {
-      const detail_totals = details_totals[i];
-      totals.total_net += detail_totals.total_net;
-      totals.total_tax += detail_totals.total_tax;
-      // for now we do this, later we can add a property o do in other way
-      if (detail_totals.total_tax == 0) {
-        totals.total_exempt += detail_totals.total_net;
+      return result.rows;
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
       }
-      totals.total += detail_totals.total;
+      throw new Error("Error getting SalesOperation");
     }
-    // for now is not posible add discount to the general sale
-    // totals.discount = (totals.total_net * percent_discount) / 100;
-    return totals;
   };
 
   // this can be in a table with all numeration
@@ -164,6 +146,25 @@ export class SalesOperationService {
         throw new Error(error.message);
       }
       throw new Error("Error getting numeration SalesOperation");
+    }
+  };
+
+  getOne = async (id: number): Promise<null | SalesOperation> => {
+    try {
+      const result = await this.repository.query(
+        "SELECT * FROM sales_operation WHERE id = $1::numeric",
+        [id],
+      );
+      if (result.rows.length <= 0) {
+        return null;
+      }
+
+      return result.rows[0];
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error getting SalesOperation");
     }
   };
 }

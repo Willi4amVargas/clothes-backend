@@ -1,5 +1,6 @@
-import { clientsController } from "@/containers";
 import { Router } from "express";
+
+import { clientsController } from "@/containers";
 
 const route = Router();
 

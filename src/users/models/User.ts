@@ -1,11 +1,11 @@
 export interface User {
-  id: number;
   code: string;
   description: string;
-  status: boolean;
   email: string;
-  profile: number;
+  id: number;
   password: string;
+  profile: number;
   recovery_token?: string;
   recovery_token_expires_at?: Date;
+  status: boolean;
 }

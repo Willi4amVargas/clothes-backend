@@ -1,9 +1,49 @@
 import { Pool } from "pg";
+
 import { Client } from "./models/Client";
 
 export class ClientsService {
   constructor(private repository: Pool) {}
 
+  create = async (client: Omit<Client, "id">): Promise<Client> => {
+    try {
+      const result = await this.repository.query(
+        `INSERT INTO public.clients (code, description, client_id, email, phone, country, city, address, credit_days, credit_limit, discount) VALUES($1::text, $2::text, $3::text, $4::text, $5::text, $6::text, $7::text, $8::text, $9::numeric, $10::numeric, $11::numeric) RETURNING *`,
+        [
+          client.code,
+          client.description,
+          client.client_id,
+          client.email,
+          client.phone,
+          client.country,
+          client.city,
+          client.address,
+          client.credit_days,
+          client.credit_limit,
+          client.discount,
+        ],
+      );
+      return result.rows[0];
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error creating Client");
+    }
+  };
+  delete = async (id: number): Promise<void> => {
+    try {
+      await this.repository.query(
+        `DELETE FROM public.clients WHERE id=$1::numeric`,
+        [id],
+      );
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error deleting Client");
+    }
+  };
   getAll = async (): Promise<Client[]> => {
     try {
       const result = await this.repository.query(
@@ -32,32 +72,6 @@ export class ClientsService {
         throw new Error(error.message);
       }
       throw new Error("Error getting Client");
-    }
-  };
-  create = async (client: Omit<Client, "id">): Promise<Client> => {
-    try {
-      const result = await this.repository.query(
-        `INSERT INTO public.clients (code, description, client_id, email, phone, country, city, address, credit_days, credit_limit, discount) VALUES($1::text, $2::text, $3::text, $4::text, $5::text, $6::text, $7::text, $8::text, $9::numeric, $10::numeric, $11::numeric) RETURNING *`,
-        [
-          client.code,
-          client.description,
-          client.client_id,
-          client.email,
-          client.phone,
-          client.country,
-          client.city,
-          client.address,
-          client.credit_days,
-          client.credit_limit,
-          client.discount,
-        ],
-      );
-      return result.rows[0];
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error creating Client");
     }
   };
   update = async (
@@ -93,19 +107,6 @@ export class ClientsService {
         throw new Error(error.message);
       }
       throw new Error("Error updating Client");
-    }
-  };
-  delete = async (id: number): Promise<void> => {
-    try {
-      await this.repository.query(
-        `DELETE FROM public.clients WHERE id=$1::numeric`,
-        [id],
-      );
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error deleting Client");
     }
   };
 }

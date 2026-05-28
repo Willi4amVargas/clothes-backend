@@ -1,7 +1,9 @@
 import request from "supertest";
-import { boostrap } from "./app";
-import { authService } from "@/containers";
+
 import { AuthService } from "@/auth/auth.service";
+import { authService } from "@/containers";
+
+import { boostrap } from "./app";
 
 const app = boostrap();
 
@@ -43,8 +45,8 @@ describe("app integration", () => {
 
   it("POST /api/products returns 400 when zod validation fails", async () => {
     jest.spyOn(AuthService, "verifyToken").mockResolvedValue({
-      id: 1,
       code: "admin",
+      id: 1,
       name: "Admin",
     } as any);
 

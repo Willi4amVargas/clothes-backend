@@ -1,19 +1,11 @@
-import { env } from "@/config/env";
 import { Transporter } from "nodemailer";
+
+import { env } from "@/config/env";
 
 export class MailService {
   constructor(private mailTransporter: Transporter) {
     this.testConnection();
   }
-
-  testConnection = async () => {
-    try {
-      await this.mailTransporter.verify();
-      console.log("Successfully connect to SMTP server");
-    } catch (err) {
-      console.error("Verification failed in MailService:", err);
-    }
-  };
 
   sendMail = async (
     to: string,
@@ -23,9 +15,9 @@ export class MailService {
     try {
       const info = await this.mailTransporter.sendMail({
         from: env.MAIL_FROM,
-        to,
-        subject,
         html,
+        subject,
+        to,
       });
       return info.messageId;
     } catch (error: any) {
@@ -40,6 +32,15 @@ export class MailService {
         default:
           throw new Error("Send failed:", error.message);
       }
+    }
+  };
+
+  testConnection = async () => {
+    try {
+      await this.mailTransporter.verify();
+      console.log("Successfully connect to SMTP server");
+    } catch (err) {
+      console.error("Verification failed in MailService:", err);
     }
   };
 }

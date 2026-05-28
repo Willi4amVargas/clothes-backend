@@ -1,5 +1,6 @@
 import express from "express";
 import request from "supertest";
+
 import ProductsUnitsRoute from "@/products_units/products_units.route";
 
 jest.mock("@/containers", () => ({
@@ -15,9 +16,9 @@ describe("products_units.route", () => {
     app.use("/", ProductsUnitsRoute);
 
     const response = await request(app).post("/products_units/1").send({
-      unit: "UND",
       cost: 1,
       price: 2,
+      unit: "UND",
     });
 
     expect(response.status).toBe(201);

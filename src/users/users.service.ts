@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+
 import { User } from "@/users/models/User";
 
 export class UsersService {
@@ -14,7 +15,25 @@ export class UsersService {
   //   }
   // };
 
-  getOnebyId = async (id: number): Promise<User | null> => {
+  getOne = async (code: string): Promise<null | User> => {
+    try {
+      const result = await this.repository.query(
+        "SELECT * FROM users WHERE code = $1::text",
+        [code],
+      );
+      if (result.rows.length <= 0) {
+        return null;
+      }
+      return result.rows[0];
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error fetching user");
+    }
+  };
+
+  getOnebyId = async (id: number): Promise<null | User> => {
     try {
       const result = await this.repository.query(
         "SELECT * FROM users WHERE id = $1::numeric",
@@ -32,21 +51,18 @@ export class UsersService {
     }
   };
 
-  getOne = async (code: string): Promise<User | null> => {
+  setRecoveryCode = async (
+    id: number,
+    hashedCode: string,
+    expiresAt: Date,
+  ) => {
     try {
-      const result = await this.repository.query(
-        "SELECT * FROM users WHERE code = $1::text",
-        [code],
+      await this.repository.query(
+        "UPDATE public.users SET recovery_token=$1::text, recovery_token_expires_at=$2::timestamp WHERE id=$3::numeric",
+        [hashedCode, expiresAt, id],
       );
-      if (result.rows.length <= 0) {
-        return null;
-      }
-      return result.rows[0];
     } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error fetching user");
+      throw new Error(error.message || "Error setting recovery code");
     }
   };
 
@@ -87,21 +103,6 @@ export class UsersService {
       );
     } catch (error: any) {
       throw new Error(error.message || "Error updating password");
-    }
-  };
-
-  setRecoveryCode = async (
-    id: number,
-    hashedCode: string,
-    expiresAt: Date,
-  ) => {
-    try {
-      await this.repository.query(
-        "UPDATE public.users SET recovery_token=$1::text, recovery_token_expires_at=$2::timestamp WHERE id=$3::numeric",
-        [hashedCode, expiresAt, id],
-      );
-    } catch (error: any) {
-      throw new Error(error.message || "Error setting recovery code");
     }
   };
 }

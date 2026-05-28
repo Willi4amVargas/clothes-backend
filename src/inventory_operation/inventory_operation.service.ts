@@ -1,43 +1,48 @@
 import { Pool } from "pg";
+
 import { InventoryOperation } from "@/inventory_operation/models/InventoryOperation";
 import { DateUtils } from "@/lib/date.utils";
 
 export class InventoryOperationService {
   constructor(private repository: Pool) {}
 
-  getAll = async (): Promise<InventoryOperation[]> => {
-    try {
-      const result = await this.repository.query(
-        "SELECT * FROM inventory_operation",
-      );
-      return result.rows;
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error getting InventoryOperations");
-    }
-  };
-  getOne = async (id: number): Promise<InventoryOperation | null> => {
-    try {
-      const result = await this.repository.query(
-        "SELECT *  FROM inventory_operation WHERE id = $1::numeric",
-        [id],
-      );
-      if (result.rows.length <= 0) {
-        return null;
-      }
-      return result.rows[0];
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error getting InventoryOperation");
-    }
-  };
+  calculateTotals = ({
+    details,
+  }: {
+    details: {
+      amount: number;
+      total: number;
+      total_cost: number;
+      total_tax: number;
+    }[];
+  }): {
+    total: number;
+    total_amount: number;
+    total_details: number;
+    total_net: number;
+    total_tax: number;
+  } => {
+    const result = {
+      total: 0,
+      total_amount: 0,
+      total_details: details.length,
+      total_net: 0,
+      total_tax: 0,
+    };
 
+    for (let i = 0; i < details.length; i++) {
+      const iod = details[i];
+
+      result.total += iod.total;
+      result.total_net += iod.total_cost;
+      result.total_tax += iod.total_tax;
+      result.total_amount += iod.amount;
+    }
+
+    return result;
+  };
   create = async (
-    inventoryOperation: Omit<InventoryOperation, "id" | "emission_date">,
+    inventoryOperation: Omit<InventoryOperation, "emission_date" | "id">,
   ): Promise<InventoryOperation> => {
     try {
       const emissionDate = DateUtils.getDateFormated(new Date());
@@ -64,6 +69,20 @@ export class InventoryOperationService {
         throw new Error(error.message);
       }
       throw new Error("Error creating InventoryOperation");
+    }
+  };
+
+  delete = async (id: number): Promise<void> => {
+    try {
+      await this.repository.query(
+        "DELETE FROM inventory_operation WHERE id=$1::numeric",
+        [id],
+      );
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error deleting InventoryOperation");
     }
   };
   // this is not in use for now
@@ -108,54 +127,18 @@ export class InventoryOperationService {
   //   }
   // };
 
-  delete = async (id: number): Promise<void> => {
+  getAll = async (): Promise<InventoryOperation[]> => {
     try {
-      await this.repository.query(
-        "DELETE FROM inventory_operation WHERE id=$1::numeric",
-        [id],
+      const result = await this.repository.query(
+        "SELECT * FROM inventory_operation",
       );
+      return result.rows;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
       }
-      throw new Error("Error deleting InventoryOperation");
+      throw new Error("Error getting InventoryOperations");
     }
-  };
-
-  calculateTotals = ({
-    details,
-  }: {
-    details: {
-      total_cost: number;
-      total_tax: number;
-      total: number;
-      amount: number;
-    }[];
-  }): {
-    total: number;
-    total_net: number;
-    total_tax: number;
-    total_details: number;
-    total_amount: number;
-  } => {
-    const result = {
-      total: 0,
-      total_net: 0,
-      total_tax: 0,
-      total_details: details.length,
-      total_amount: 0,
-    };
-
-    for (let i = 0; i < details.length; i++) {
-      const iod = details[i];
-
-      result.total += iod.total;
-      result.total_net += iod.total_cost;
-      result.total_tax += iod.total_tax;
-      result.total_amount += iod.amount;
-    }
-
-    return result;
   };
 
   // this can be in a table with all numeration
@@ -178,6 +161,24 @@ export class InventoryOperationService {
         throw new Error(error.message);
       }
       throw new Error("Error getting numeration InventoryOperation");
+    }
+  };
+
+  getOne = async (id: number): Promise<InventoryOperation | null> => {
+    try {
+      const result = await this.repository.query(
+        "SELECT *  FROM inventory_operation WHERE id = $1::numeric",
+        [id],
+      );
+      if (result.rows.length <= 0) {
+        return null;
+      }
+      return result.rows[0];
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error getting InventoryOperation");
     }
   };
 }

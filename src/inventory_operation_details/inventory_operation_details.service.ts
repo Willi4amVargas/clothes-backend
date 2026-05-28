@@ -1,55 +1,35 @@
 import { Pool } from "pg";
+
 import { InventoryOperationDetails } from "@/inventory_operation_details/models/InventoryOperationDetails";
 
 export class InventoryOperationDetailsService {
   constructor(private repository: Pool) {}
 
-  getAll = async (
-    main_id: number,
-  ): Promise<InventoryOperationDetails[] | null> => {
-    try {
-      const result = await this.repository.query(
-        "SELECT *  FROM inventory_operation_details WHERE main_id = $1::numeric",
-        [main_id],
-      );
-      if (result.rows.length <= 0) {
-        return null;
-      }
-      return result.rows;
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error getting InventoryOperationDetails");
-    }
-  };
+  calculateTotals = ({
+    aliquot,
+    amount,
+    unitary_cost,
+  }: {
+    aliquot: number;
+    amount: number;
+    unitary_cost: number;
+  }): {
+    total: number;
+    total_cost: number;
+    total_tax: number;
+  } => {
+    const total_cost = unitary_cost * amount;
+    const total_tax = unitary_cost * (aliquot / 100) * amount;
+    const total = total_cost + total_tax;
 
-  getOne = async (
-    main_id: number,
-    line: number,
-  ): Promise<InventoryOperationDetails | null> => {
-    try {
-      const result = await this.repository.query(
-        "SELECT *  FROM inventory_operation_details WHERE main_id = $1::numeric AND line=$2::numeric",
-        [main_id, line],
-      );
-      if (result.rows.length <= 0) {
-        return null;
-      }
-      return result.rows[0];
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error getting InventoryOperationDetail");
-    }
+    return { total, total_cost, total_tax };
   };
 
   create = async (
     main_id: number,
     inventoryOperationDetail: Omit<
       InventoryOperationDetails,
-      "main_id" | "line"
+      "line" | "main_id"
     >,
   ): Promise<InventoryOperationDetailsService> => {
     try {
@@ -76,6 +56,20 @@ export class InventoryOperationDetailsService {
         throw new Error(error.message);
       }
       throw new Error("Error creating InventoryOperationDetails");
+    }
+  };
+
+  delete = async (main_id: number, line: number): Promise<void> => {
+    try {
+      await this.repository.query(
+        "DELETE FROM public.inventory_operation_details WHERE main_id=$1::numeric AND line=$2::numeric",
+        [main_id, line],
+      );
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error deleting InventoryOperationDetails");
     }
   };
   // this is not in use for now
@@ -128,37 +122,44 @@ export class InventoryOperationDetailsService {
   //   }
   // };
 
-  delete = async (main_id: number, line: number): Promise<void> => {
+  getAll = async (
+    main_id: number,
+  ): Promise<InventoryOperationDetails[] | null> => {
     try {
-      await this.repository.query(
-        "DELETE FROM public.inventory_operation_details WHERE main_id=$1::numeric AND line=$2::numeric",
-        [main_id, line],
+      const result = await this.repository.query(
+        "SELECT *  FROM inventory_operation_details WHERE main_id = $1::numeric",
+        [main_id],
       );
+      if (result.rows.length <= 0) {
+        return null;
+      }
+      return result.rows;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
       }
-      throw new Error("Error deleting InventoryOperationDetails");
+      throw new Error("Error getting InventoryOperationDetails");
     }
   };
 
-  calculateTotals = ({
-    aliquot,
-    amount,
-    unitary_cost,
-  }: {
-    amount: number;
-    unitary_cost: number;
-    aliquot: number;
-  }): {
-    total: number;
-    total_cost: number;
-    total_tax: number;
-  } => {
-    const total_cost = unitary_cost * amount;
-    const total_tax = unitary_cost * (aliquot / 100) * amount;
-    const total = total_cost + total_tax;
-
-    return { total, total_cost, total_tax };
+  getOne = async (
+    main_id: number,
+    line: number,
+  ): Promise<InventoryOperationDetails | null> => {
+    try {
+      const result = await this.repository.query(
+        "SELECT *  FROM inventory_operation_details WHERE main_id = $1::numeric AND line=$2::numeric",
+        [main_id, line],
+      );
+      if (result.rows.length <= 0) {
+        return null;
+      }
+      return result.rows[0];
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error getting InventoryOperationDetail");
+    }
   };
 }

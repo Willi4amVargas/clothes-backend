@@ -1,10 +1,80 @@
-import { ClientsService } from "@/clients/clients.service";
 import { Request, Response } from "express";
+
+import { ClientsService } from "@/clients/clients.service";
 import { CreateClientDto } from "@/clients/dto/create-client.dto";
 import { UpdateClientDto } from "@/clients/dto/update-client.dto";
 
 export class ClientsController {
   constructor(private clientsService: ClientsService) {}
+
+  create = async (req: Request, res: Response) => {
+    const isDryRun = res.locals.dry_run;
+    const createClientDtoParse = CreateClientDto.safeParse(req.body);
+
+    if (!createClientDtoParse.success) {
+      return res
+        .status(400)
+        .json({ message: createClientDtoParse.error?.issues });
+    }
+    const client = createClientDtoParse.data;
+
+    try {
+      if (isDryRun) {
+        return res.status(201).json({
+          ...client,
+          dry_run: true,
+          id: 0,
+          message:
+            "Dry run enabled: request validated and simulated without persisting changes",
+        });
+      }
+      const newClient = await this.clientsService.create(client);
+      return res.status(201).json(newClient);
+    } catch (error: any) {
+      if (error.message) {
+        return res.status(400).json({ message: error.message });
+      }
+      return res.status(500).json({ message: "Error creating client" });
+    }
+  };
+
+  delete = async (req: Request, res: Response) => {
+    const isDryRun = res.locals.dry_run;
+    const { id } = req.params;
+    if (!id || typeof id !== "string") {
+      return res.status(400).json({ message: "Id is not valid" });
+    }
+
+    if (Number.isNaN(+id)) {
+      return res.status(400).json({ message: "id is not a number" });
+    }
+
+    if (+id <= 0) {
+      return res
+        .status(400)
+        .json({ message: "id cant be equal or less than 0" });
+    }
+    try {
+      if (isDryRun) {
+        const existingClient = await this.clientsService.getOne(+id);
+        if (!existingClient) {
+          return res.status(404).json({ message: "Client not found" });
+        }
+        return res.status(200).json({
+          dry_run: true,
+          message:
+            "Dry run enabled: delete validated and simulated without persisting changes",
+        });
+      }
+      await this.clientsService.delete(+id);
+      return res.status(200).json({ message: "Client deleted successfully" });
+    } catch (error: any) {
+      if (error.message) {
+        return res.status(400).json({ message: error.message });
+      }
+      return res.status(500).json({ message: "Error deleting client" });
+    }
+  };
 
   getAll = async (_: Request, res: Response) => {
     try {
@@ -44,37 +114,6 @@ export class ClientsController {
         return res.status(400).json({ message: error.message });
       }
       return res.status(500).json({ message: "Error getting clients" });
-    }
-  };
-
-  create = async (req: Request, res: Response) => {
-    const isDryRun = res.locals.dry_run;
-    const createClientDtoParse = CreateClientDto.safeParse(req.body);
-
-    if (!createClientDtoParse.success) {
-      return res
-        .status(400)
-        .json({ message: createClientDtoParse.error?.issues });
-    }
-    const client = createClientDtoParse.data;
-
-    try {
-      if (isDryRun) {
-        return res.status(201).json({
-          ...client,
-          id: 0,
-          dry_run: true,
-          message:
-            "Dry run enabled: request validated and simulated without persisting changes",
-        });
-      }
-      const newClient = await this.clientsService.create(client);
-      return res.status(201).json(newClient);
-    } catch (error: any) {
-      if (error.message) {
-        return res.status(400).json({ message: error.message });
-      }
-      return res.status(500).json({ message: "Error creating client" });
     }
   };
 
@@ -125,44 +164,6 @@ export class ClientsController {
         return res.status(400).json({ message: error.message });
       }
       return res.status(500).json({ message: "Error updating client" });
-    }
-  };
-
-  delete = async (req: Request, res: Response) => {
-    const isDryRun = res.locals.dry_run;
-    const { id } = req.params;
-    if (!id || typeof id !== "string") {
-      return res.status(400).json({ message: "Id is not valid" });
-    }
-
-    if (Number.isNaN(+id)) {
-      return res.status(400).json({ message: "id is not a number" });
-    }
-
-    if (+id <= 0) {
-      return res
-        .status(400)
-        .json({ message: "id cant be equal or less than 0" });
-    }
-    try {
-      if (isDryRun) {
-        const existingClient = await this.clientsService.getOne(+id);
-        if (!existingClient) {
-          return res.status(404).json({ message: "Client not found" });
-        }
-        return res.status(200).json({
-          message:
-            "Dry run enabled: delete validated and simulated without persisting changes",
-          dry_run: true,
-        });
-      }
-      await this.clientsService.delete(+id);
-      return res.status(200).json({ message: "Client deleted successfully" });
-    } catch (error: any) {
-      if (error.message) {
-        return res.status(400).json({ message: error.message });
-      }
-      return res.status(500).json({ message: "Error deleting client" });
     }
   };
 }

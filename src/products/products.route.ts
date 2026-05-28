@@ -1,4 +1,5 @@
 import { Router } from "express";
+
 import { productsController } from "@/containers";
 
 const route = Router();

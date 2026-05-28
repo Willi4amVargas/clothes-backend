@@ -10,7 +10,7 @@ export const dryRun = async (
   // Si no existe, por defecto es verdadero
   if (dry_run === undefined) {
     res.locals.dry_run = true;
-    return next();
+    next(); return;
   }
 
   if (typeof dry_run !== "string") {
@@ -38,5 +38,5 @@ export const dryRun = async (
 
   res.locals.dry_run = result.data;
 
-  return next();
+  next();
 };

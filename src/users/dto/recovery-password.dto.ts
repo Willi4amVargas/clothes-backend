@@ -6,6 +6,6 @@ export const RecoveryPasswordDto = z.object({
 
 export const ResetPasswordDto = z.object({
   code: z.string(),
-  recovery_code: z.string().length(6),
   new_password: z.string().min(2),
+  recovery_code: z.string().length(6),
 });

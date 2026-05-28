@@ -1,8 +1,42 @@
 import { Pool } from "pg";
+
 import { ProductStock } from "@/products_stock/models/ProductStock";
 
 export class ProductsStockService {
   constructor(private repository: Pool) {}
+
+  create = async (
+    product_id: number,
+    unit: number,
+    productStock: Omit<ProductStock, "product_id" | "unit">,
+  ): Promise<ProductStock> => {
+    try {
+      const result = await this.repository.query(
+        "INSERT INTO products_stock (product_id, unit, stock) VALUES ($1::integer, $2::integer, $3::integer) RETURNING *",
+        [product_id, unit, productStock.stock],
+      );
+      return result.rows[0];
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error creating product stock");
+    }
+  };
+
+  delete = async (product_id: number, unit: number): Promise<void> => {
+    try {
+      await this.repository.query(
+        "DELETE FROM products_stock WHERE product_id = $1::numeric AND unit = $2::numeric",
+        [product_id, unit],
+      );
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error deleting product stock");
+    }
+  };
 
   getAll = async (product_id: number): Promise<ProductStock[]> => {
     try {
@@ -22,7 +56,7 @@ export class ProductsStockService {
   getOne = async (
     product_id: number,
     unit: number,
-  ): Promise<ProductStock | null> => {
+  ): Promise<null | ProductStock> => {
     try {
       const result = await this.repository.query(
         "SELECT * FROM products_stock WHERE product_id = $1::numeric AND unit = $2::numeric",
@@ -37,25 +71,6 @@ export class ProductsStockService {
         throw new Error(error.message);
       }
       throw new Error("Error fetching product stock");
-    }
-  };
-
-  create = async (
-    product_id: number,
-    unit: number,
-    productStock: Omit<ProductStock, "product_id" | "unit">,
-  ): Promise<ProductStock> => {
-    try {
-      const result = await this.repository.query(
-        "INSERT INTO products_stock (product_id, unit, stock) VALUES ($1::integer, $2::integer, $3::integer) RETURNING *",
-        [product_id, unit, productStock.stock],
-      );
-      return result.rows[0];
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error creating product stock");
     }
   };
 
@@ -90,20 +105,6 @@ export class ProductsStockService {
         throw new Error(error.message);
       }
       throw new Error("Error updating product stock");
-    }
-  };
-
-  delete = async (product_id: number, unit: number): Promise<void> => {
-    try {
-      await this.repository.query(
-        "DELETE FROM products_stock WHERE product_id = $1::numeric AND unit = $2::numeric",
-        [product_id, unit],
-      );
-    } catch (error: any) {
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Error deleting product stock");
     }
   };
 }

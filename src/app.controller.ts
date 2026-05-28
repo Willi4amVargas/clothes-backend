@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+
 import { AppService } from "@/app.service";
 
 export class AppController {

@@ -1,18 +1,20 @@
 import { Request, Response } from "express";
-import { UsersService } from "./users.service";
-import { UpdateUserDto } from "./dto/update-user.dto";
-import { MailService } from "@/mail/mail.service";
-import {
-  RecoveryPasswordDto,
-  ResetPasswordDto,
-} from "./dto/recovery-password.dto";
-import { TemplateService } from "@/templates/template.service";
+import { randomInt } from "node:crypto";
+
 import {
   hashPassword,
   hashRecoveryCode,
   verifyRecoveryCode,
 } from "@/lib/hash.utils";
-import { randomInt } from "node:crypto";
+import { MailService } from "@/mail/mail.service";
+import { TemplateService } from "@/templates/template.service";
+
+import {
+  RecoveryPasswordDto,
+  ResetPasswordDto,
+} from "./dto/recovery-password.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { UsersService } from "./users.service";
 
 export class UserController {
   constructor(
@@ -20,6 +22,11 @@ export class UserController {
     private mailService: MailService,
     private templateService: TemplateService,
   ) { }
+
+  getUserInfo = async (_: Request, res: Response) => {
+    const { password, ...updatedUserWithoutPassword } = res.locals.user;
+    return res.json(updatedUserWithoutPassword);
+  };
 
   recoveryPassword = async (req: Request, res: Response) => {
     const recoveryPasswordDtoParse = RecoveryPasswordDto.safeParse(req.body);
@@ -35,7 +42,7 @@ export class UserController {
       const user = await this.usersRepository.getOne(userCode);
 
       // Si el usuario no existe, respondemos éxito ficticio para evitar enumeración
-      if (!user || !user.email) {
+      if (!user?.email) {
         return res.json({
           message:
             "Si el usuario existe y tiene un correo asociado, se ha enviado un código de recuperación.",
@@ -60,9 +67,9 @@ export class UserController {
       const templateHTML = await this.templateService.render(
         "recovery_password",
         {
-          username: user.description || user.code,
-          recoveryCode,
           currentYear: new Date().getFullYear(),
+          recoveryCode,
+          username: user.description || user.code,
         },
       );
 
@@ -90,7 +97,7 @@ export class UserController {
         .json({ message: resetPasswordDtoParse.error?.issues });
     }
 
-    const { code, recovery_code, new_password } = resetPasswordDtoParse.data;
+    const { code, new_password, recovery_code } = resetPasswordDtoParse.data;
 
     try {
       const user = await this.usersRepository.getOne(code);
@@ -126,11 +133,6 @@ export class UserController {
       console.error(error);
       res.status(500).json({ message: "Error al restablecer la contraseña" });
     }
-  };
-
-  getUserInfo = async (_: Request, res: Response) => {
-    const { password, ...updatedUserWithoutPassword } = res.locals.user;
-    return res.json(updatedUserWithoutPassword);
   };
 
   update = async (req: Request, res: Response) => {

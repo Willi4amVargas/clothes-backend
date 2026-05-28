@@ -1,13 +1,13 @@
 export interface Product {
-  id: number;
+  buy_tax: number;
   code: string;
   description: string;
+  discount: number;
+  id: number;
   mark: string;
   model: string;
-  referenc: string;
-  discount: number;
-  status: boolean;
   origin: string;
-  buy_tax: number;
+  referenc: string;
   sale_tax: number;
+  status: boolean;
 }

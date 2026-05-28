@@ -1,5 +1,6 @@
-import { AuthService } from "@/auth/auth.service";
 import { Request, Response } from "express";
+
+import { AuthService } from "@/auth/auth.service";
 import { AuthDto } from "@/auth/dto/auth.dto";
 
 export class AuthController {
@@ -19,7 +20,7 @@ export class AuthController {
         return res.status(401).json({ message: "Invalid credentials" });
       }
       res.json({ token });
-    } catch (error) {
+    } catch {
       res.status(500).json({ message: "Error signing in" });
     }
   };

@@ -1,5 +1,6 @@
-import { productsUnitsController } from "@/containers";
 import { Router } from "express";
+
+import { productsUnitsController } from "@/containers";
 
 const route = Router();
 
