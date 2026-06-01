@@ -5,13 +5,16 @@ import { UpdateProductDto } from "@/products/dto/update-product.dto";
 import { ProductsService } from "@/products/products.service";
 import { ProductsStockService } from "@/products_stock/products_stock.service";
 import { ProductsUnitsService } from "@/products_units/products_units.service";
+import { StorageService } from "@/storage/storage.service";
 
 export class ProductsController {
+  private ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
   constructor(
     private productsService: ProductsService,
     private productsUnitsService: ProductsUnitsService,
     private productsStockService: ProductsStockService,
-  ) {}
+    private storageService: StorageService,
+  ) { }
 
   create = async (req: Request, res: Response) => {
     const isDryRun = res.locals.dry_run;
@@ -20,7 +23,7 @@ export class ProductsController {
     if (!CreateProductDtoParse.success) {
       return res
         .status(400)
-        .json({ message: CreateProductDtoParse.error?.issues });
+        .json({ message: CreateProductDtoParse.error.issues });
     }
     const product = CreateProductDtoParse.data;
 
@@ -108,6 +111,56 @@ export class ProductsController {
     }
   };
 
+  deleteImage = async (req: Request, res: Response) => {
+    const isDryRun = res.locals.dry_run;
+    const { id } = req.params;
+    if (!id || typeof id !== "string") {
+      res.status(400).json({ message: "Invalid product code" });
+      return;
+    }
+
+    if (Number.isNaN(+id)) {
+      res.status(400).json({ message: "id is not a number" });
+      return;
+    }
+
+    if (+id <= 0) {
+      res.status(400).json({ message: "id can't be less or equal to 0" });
+      return;
+    }
+
+    const existingProducts = await this.productsService.getOne(+id);
+
+    if (!existingProducts) {
+      res.status(400).json({ message: "Product dont exist" });
+      return;
+    }
+
+    if (!existingProducts.image_url) {
+      res.status(400).json({ message: "This product has no image" });
+      return;
+    }
+    try {
+      if (isDryRun) {
+        return res.json({
+          dry_run: true,
+          message:
+            "Dry run enabled: delete validated and simulated without persisting changes",
+        });
+      }
+      await this.storageService.delete(existingProducts.image_url);
+      await this.productsService.updateImageUrl(existingProducts.id)
+      return res.json({ message: "Image deleted successfully" });
+    } catch (error: any) {
+      if (error.message) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "Error deleting product image" });
+      }
+    }
+
+  };
+
   getAll = async (_: Request, res: Response) => {
     try {
       const products = await this.productsService.getAll();
@@ -119,6 +172,18 @@ export class ProductsController {
       res.status(500).json({ message: "Error fetching products" });
     }
   };
+
+  getMarks = async (_: Request, res: Response) => {
+    try {
+      const products = await this.productsService.getMarks();
+      res.json(products);
+    } catch (error: any) {
+      if (error.message) {
+        return res.status(500).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Error fetching products" });
+    }
+  }
 
   getOne = async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -183,7 +248,7 @@ export class ProductsController {
     if (!UpdateProductDtoParse.success) {
       return res
         .status(400)
-        .json({ message: UpdateProductDtoParse.error?.issues });
+        .json({ message: UpdateProductDtoParse.error.issues });
     }
     const product = UpdateProductDtoParse.data;
 
@@ -222,5 +287,67 @@ export class ProductsController {
         res.status(500).json({ message: "Error updating product" });
       }
     }
+  };
+
+  uploadImage = async (req: Request, res: Response) => {
+    const isDryRun = res.locals.dry_run;
+    const { id } = req.params;
+    if (!id || typeof id !== "string") {
+      res.status(400).json({ message: "Invalid product code" });
+      return;
+    }
+
+    if (Number.isNaN(+id)) {
+      res.status(400).json({ message: "id is not a number" });
+      return;
+    }
+
+    if (+id <= 0) {
+      res.status(400).json({ message: "id can't be less or equal to 0" });
+      return;
+    }
+
+    const existingProducts = await this.productsService.getOne(+id);
+
+    if (!existingProducts) {
+      res.status(400).json({ message: "Product dont exist" });
+      return;
+    }
+
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ message: "File must exist" });
+      return;
+    }
+
+    if (!this.ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+      return res.status(400).json({
+        message: "Format not valid. Only accepts JPEG, PNG y WEBP.",
+      });
+    }
+    // save the file
+    try {
+      if (isDryRun) {
+        return res.json({
+          dry_run: true,
+          message:
+            "Dry run enabled: upload validated and simulated without persisting changes",
+        });
+      }
+
+      if (existingProducts.image_url) {
+        await this.storageService.delete(existingProducts.image_url)
+      }
+      const finalFileName = await this.storageService.save(existingProducts.id.toString(), file);
+      await this.productsService.updateImageUrl(existingProducts.id, finalFileName)
+      return res.json({ message: "Product image succesfully created" })
+    } catch (error: any) {
+      if (error.message) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "Error creating product image" });
+      }
+    }
+
   };
 }

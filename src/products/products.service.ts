@@ -3,7 +3,7 @@ import { Pool } from "pg";
 import { Product } from "@/products/models/Product";
 
 export class ProductsService {
-  constructor(private repository: Pool) {}
+  constructor(private repository: Pool) { }
 
   create = async (product: Omit<Product, "id">): Promise<Product> => {
     try {
@@ -11,9 +11,6 @@ export class ProductsService {
         `
         INSERT INTO public.products (code, description, mark, model, referenc, discount, status, origin, buy_tax, sale_tax) VALUES($1::text, $2::text, $3::text, $4::text, $5::text, $6::numeric, $7::boolean, $8::text, $9::numeric, $10::numeric) RETURNING *
         `,
-        //`INSERT INTO products (code, description, short_name, mark, model, referenc, discount, status, origin, buy_tax, sale_tax)
-        // VALUES ($1::text, $2::text, $3::text, $4::text, $5::text, $6::text, $7::numeric, $8::boolean, $9::text, $10::numeric, $11::numeric)
-        //) RETURNING *`,
         [
           product.code,
           product.description,
@@ -64,6 +61,22 @@ export class ProductsService {
     }
   };
 
+  getMarks = async (): Promise<string[]> => {
+    try {
+      const result = await this.repository.query(
+        `
+        SELECT mark FROM products GROUP BY mark ORDER BY mark ASC
+        `,
+      );
+      return result.rows;
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.messgae);
+      }
+      throw new Error("Error updating product");
+    }
+  }
+
   getOne = async (id: number): Promise<null | Product> => {
     try {
       const result = await this.repository.query(
@@ -97,8 +110,6 @@ export class ProductsService {
         `
         UPDATE public.products SET code=$1::text, description=$2::text, mark=$3::text, model=$4::text, referenc=$5::text, discount=$6::numeric, status=$7::boolean, origin=$8::text, buy_tax=$9::numeric, sale_tax=$10::numeric WHERE id=$11::numeric RETURNING *
         `,
-        //`UPDATE products SET description = $1::text, short_name = $2::text, mark = $3::text, model = $4::text, referenc = $5::text, discount = $6::numeric, status = //$7::boolean, origin = $8::text, buy_tax = $9::numeric, sale_tax = $10::numeric
-        // WHERE code = $11::text RETURNING *`,
         [
           updatedProduct.code,
           updatedProduct.description,
@@ -121,4 +132,24 @@ export class ProductsService {
       throw new Error("Error updating product");
     }
   };
+  updateImageUrl = async (id: number, image_url?: string) => {
+    try {
+      const result = await this.repository.query(
+        `
+        UPDATE public.products SET image_url=$1::text WHERE id=$2::numeric RETURNING *
+        `,
+        [
+          image_url,
+          id,
+        ],
+      );
+      return result.rows[0];
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Error updating product");
+    }
+  }
+
 }

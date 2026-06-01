@@ -4,6 +4,7 @@ export interface Product {
   description: string;
   discount: number;
   id: number;
+  image_url?: string;
   mark: string;
   model: string;
   origin: string;

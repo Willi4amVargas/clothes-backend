@@ -2,6 +2,7 @@ import { AppController } from "@/app.controller";
 import { AppService } from "@/app.service";
 import { AuthController } from "@/auth/auth.controller";
 import { AuthService } from "@/auth/auth.service";
+import { ClientsController } from "@/clients/clients.controller";
 import { ClientsService } from "@/clients/clients.service";
 import pool from "@/config/db";
 import { InventoryOperationController } from "@/inventory_operation/inventory_operation.controller";
@@ -20,13 +21,13 @@ import { SalesOperationDetailsService } from "@/sales_operation_details/sales_op
 import { ShoppingOperationController } from "@/shopping_operation/shopping_operation.controller";
 import { ShoppingOperationService } from "@/shopping_operation/shopping_operation.service";
 import { ShoppingOperationDetailsService } from "@/shopping_operation_details/shopping_operation_details.service";
+import { StorageService } from "@/storage/storage.service";
 import { TemplateService } from "@/templates/template.service";
 import { UserController } from "@/users/users.controller";
 import { UsersService } from "@/users/users.service";
 
-import { ClientsController } from "./clients/clients.controller";
-
 export const templateService = new TemplateService();
+export const storageService = new StorageService();
 
 export const appService = new AppService();
 export const appController = new AppController(appService);
@@ -47,6 +48,7 @@ export const productsController = new ProductsController(
   productsService,
   productsUnitsService,
   productsStockService,
+  storageService,
 );
 export const productsUnitsController = new ProductsUnitsController(
   productsUnitsService,

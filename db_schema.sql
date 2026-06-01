@@ -56,7 +56,8 @@ CREATE TABLE public.products (
     status boolean,
     origin character varying,
     buy_tax double precision,
-    sale_tax double precision
+    sale_tax double precision,
+    image_url character varying
 );
 
 CREATE TABLE public.products_stock (
