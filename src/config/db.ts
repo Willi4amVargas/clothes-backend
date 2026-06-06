@@ -22,7 +22,7 @@ const testConnection = async () => {
   try {
     const value = await pool.query("SELECT true as test")
     console.log("Successfully connect to Database: ", value.rows[0])
-    return value
+    return value.rows
   } catch (error) {
     console.log(error)
   }
