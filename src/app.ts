@@ -21,7 +21,7 @@ export const boostrap = (): Express => {
   app.use(logger);
   app.use(cors());
 
-  // app.use("/api", SwaggerRoute);
+  app.use("/api", SwaggerRoute);
 
   app.use(verifyToken);
   app.use(dryRun);
@@ -36,7 +36,6 @@ export const boostrap = (): Express => {
     SalesOperationRoute,
     ShoppingOperationRoute,
     UserRoute,
-    SwaggerRoute
   ]);
   return app;
 };
