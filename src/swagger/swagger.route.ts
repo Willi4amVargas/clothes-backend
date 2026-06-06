@@ -54,15 +54,6 @@ const options: swaggerJsdoc.Options = {
 const router = Router();
 const swaggerSpec = swaggerJsdoc(options);
 
-const uiOptions = {
-  customCssUrl: 'https://erp.widvu.com/api/docs/swagger-ui.css',
-  customJs: [
-    'https://erp.widvu.com/api/docs/swagger-ui-bundle.js',
-    'https://erp.widvu.com/api/docs/swagger-ui-standalone-preset.js'
-  ],
-};
-
-// CAMBIO CRUCIAL: Se usa .use() para ambos y se pasan las opciones en el setup()
-router.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, uiOptions));
+router.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 export default router;
