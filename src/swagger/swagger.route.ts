@@ -4,6 +4,11 @@ import swaggerUi from "swagger-ui-express";
 
 const options: swaggerJsdoc.Options = {
   apis: ["./src/**/*.docs.yaml"],
+  customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css',
+  customJs: [
+    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.js'
+  ],
   definition: {
     components: {
       securitySchemes: {
@@ -22,11 +27,9 @@ const options: swaggerJsdoc.Options = {
     schemes: ["http"],
     servers: [
       {
-        url: "http://localhost:5000/api/",
-      },
-      {
-        url: "http://192.168.0.108:5000/api/",
-      },
+        description: "Servidor actual",
+        url: "/api",
+      }
     ],
     tags: [
       {
@@ -50,7 +53,7 @@ const options: swaggerJsdoc.Options = {
         name: "Compras",
       },
     ],
-  },
+  }
 };
 
 const router = Router();
