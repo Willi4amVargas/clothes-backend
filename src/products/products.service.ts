@@ -3,7 +3,7 @@ import { Pool } from "pg";
 import { Product } from "@/products/models/Product";
 
 export class ProductsService {
-  constructor(private repository: Pool) { }
+  constructor(private repository: Pool) {}
 
   create = async (product: Omit<Product, "id">): Promise<Product> => {
     try {
@@ -75,7 +75,7 @@ export class ProductsService {
       }
       throw new Error("Error updating product");
     }
-  }
+  };
 
   getOne = async (id: number): Promise<null | Product> => {
     try {
@@ -138,10 +138,7 @@ export class ProductsService {
         `
         UPDATE public.products SET image_url=$1::text WHERE id=$2::numeric RETURNING *
         `,
-        [
-          image_url,
-          id,
-        ],
+        [image_url, id],
       );
       return result.rows[0];
     } catch (error: any) {
@@ -150,6 +147,5 @@ export class ProductsService {
       }
       throw new Error("Error updating product");
     }
-  }
-
+  };
 }

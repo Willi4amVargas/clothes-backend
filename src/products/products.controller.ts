@@ -6,6 +6,7 @@ import { ProductsService } from "@/products/products.service";
 import { ProductsStockService } from "@/products_stock/products_stock.service";
 import { ProductsUnitsService } from "@/products_units/products_units.service";
 import { StorageService } from "@/storage/storage.service";
+import { GetAllProductsParamsDto } from "./dto/get-all-products.dto";
 
 export class ProductsController {
   private ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -14,7 +15,7 @@ export class ProductsController {
     private productsUnitsService: ProductsUnitsService,
     private productsStockService: ProductsStockService,
     private storageService: StorageService,
-  ) { }
+  ) {}
 
   create = async (req: Request, res: Response) => {
     const isDryRun = res.locals.dry_run;
@@ -149,7 +150,7 @@ export class ProductsController {
         });
       }
       await this.storageService.delete(existingProducts.image_url);
-      await this.productsService.updateImageUrl(existingProducts.id)
+      await this.productsService.updateImageUrl(existingProducts.id);
       return res.json({ message: "Image deleted successfully" });
     } catch (error: any) {
       if (error.message) {
@@ -158,13 +159,38 @@ export class ProductsController {
         res.status(500).json({ message: "Error deleting product image" });
       }
     }
-
   };
 
-  getAll = async (_: Request, res: Response) => {
+  getAll = async (req: Request, res: Response) => {
     try {
+      const paramsDtoParse = GetAllProductsParamsDto.safeParse(req.query);
+
+      if (!paramsDtoParse.success) {
+        return res.status(400).json({ message: paramsDtoParse.error.issues });
+      }
+      const params = paramsDtoParse.data;
+
       const products = await this.productsService.getAll();
-      res.json(products);
+      const productsId = products.map((p) => p.id);
+
+      const productsStock = params.stock
+        ? await this.productsStockService.getAll(productsId)
+        : [];
+
+      const productsUnits = params.units
+        ? await this.productsUnitsService.getAll(productsId)
+        : [];
+
+      const productsResponse: any[] = [];
+      for (const product of products) {
+        productsResponse.push({
+          ...product,
+          stock: productsStock.filter((p) => p.product_id === product.id),
+          units: productsUnits.filter((p) => p.product_id === product.id),
+        })
+      }
+
+      return res.json(productsResponse);
     } catch (error: any) {
       if (error.message) {
         return res.status(500).json({ message: error.message });
@@ -183,7 +209,7 @@ export class ProductsController {
       }
       res.status(500).json({ message: "Error fetching products" });
     }
-  }
+  };
 
   getOne = async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -336,11 +362,17 @@ export class ProductsController {
       }
 
       if (existingProducts.image_url) {
-        await this.storageService.delete(existingProducts.image_url)
+        await this.storageService.delete(existingProducts.image_url);
       }
-      const finalFileName = await this.storageService.save(existingProducts.id.toString(), file);
-      await this.productsService.updateImageUrl(existingProducts.id, finalFileName)
-      return res.json({ message: "Product image succesfully created" })
+      const finalFileName = await this.storageService.save(
+        existingProducts.id.toString(),
+        file,
+      );
+      await this.productsService.updateImageUrl(
+        existingProducts.id,
+        finalFileName,
+      );
+      return res.json({ message: "Product image succesfully created" });
     } catch (error: any) {
       if (error.message) {
         res.status(400).json({ message: error.message });
@@ -348,6 +380,5 @@ export class ProductsController {
         res.status(500).json({ message: "Error creating product image" });
       }
     }
-
   };
 }

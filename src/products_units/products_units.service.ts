@@ -49,11 +49,20 @@ export class ProductsUnitsService {
     }
   };
 
-  getAll = async (product_id: number): Promise<ProductUnit[]> => {
+  getAll = async (product_id: number | number[]): Promise<ProductUnit[]> => {
+    const productIDIsArray = Array.isArray(product_id);
+    let query = "SELECT * FROM products_units";
+    if (productIDIsArray) {
+      query += ` WHERE product_id IN (${product_id
+        .map((_, index) => `\$${index + 1}::numeric`)
+        .join(", ")})`;
+    } else {
+      query += ` WHERE product_id = $1::numeric`;
+    }
     try {
       const result = await this.repository.query(
-        "SELECT * FROM products_units WHERE product_id = $1::numeric",
-        [product_id],
+        query,
+        productIDIsArray ? product_id : [product_id],
       );
       return result.rows;
     } catch (error: any) {
