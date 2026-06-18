@@ -21,9 +21,34 @@ export class UserController {
     private usersRepository: UsersService,
     private mailService: MailService,
     private templateService: TemplateService,
-  ) { }
+  ) {}
+  getUserBasicInfo = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    if (!id || typeof id !== "string") {
+      res.status(400).json({ message: "Invalid user id" });
+      return;
+    }
 
-  getUserInfo = async (_: Request, res: Response) => {
+    if (Number.isNaN(+id)) {
+      res.status(400).json({ message: "id is not a number" });
+      return;
+    }
+
+    if (+id <= 0) {
+      res.status(400).json({ message: "id can't be less or equal to 0" });
+      return;
+    }
+
+    const user = await this.usersRepository.getBasicInfo(+id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User dont exist" });
+    }
+
+    return res.json(user);
+  };
+
+  getUserInfo = (_: Request, res: Response) => {
     const { password, ...updatedUserWithoutPassword } = res.locals.user;
     return res.json(updatedUserWithoutPassword);
   };
@@ -33,7 +58,7 @@ export class UserController {
     if (!recoveryPasswordDtoParse.success) {
       return res
         .status(400)
-        .json({ message: recoveryPasswordDtoParse.error?.issues });
+        .json({ message: recoveryPasswordDtoParse.error.issues });
     }
 
     const userCode = recoveryPasswordDtoParse.data.code;
@@ -94,7 +119,7 @@ export class UserController {
     if (!resetPasswordDtoParse.success) {
       return res
         .status(400)
-        .json({ message: resetPasswordDtoParse.error?.issues });
+        .json({ message: resetPasswordDtoParse.error.issues });
     }
 
     const { code, new_password, recovery_code } = resetPasswordDtoParse.data;
@@ -103,11 +128,15 @@ export class UserController {
       const user = await this.usersRepository.getOne(code);
 
       if (!user) {
-        return res.status(400).json({ message: "Código de recuperación inválido o expirado" });
+        return res
+          .status(400)
+          .json({ message: "Código de recuperación inválido o expirado" });
       }
 
       if (!user.recovery_token || !user.recovery_token_expires_at) {
-        return res.status(400).json({ message: "No se ha solicitado una recuperación" });
+        return res
+          .status(400)
+          .json({ message: "No se ha solicitado una recuperación" });
       }
 
       // Validar expiración
@@ -119,7 +148,9 @@ export class UserController {
       // Validar código
       const isValid = verifyRecoveryCode(recovery_code, user.recovery_token);
       if (!isValid) {
-        return res.status(400).json({ message: "Código de recuperación inválido" });
+        return res
+          .status(400)
+          .json({ message: "Código de recuperación inválido" });
       }
 
       // Hashear nueva contraseña
@@ -145,9 +176,7 @@ export class UserController {
     const UpdateUserDtoParse = UpdateUserDto.safeParse(req.body);
 
     if (!UpdateUserDtoParse.success) {
-      return res
-        .status(400)
-        .json({ message: UpdateUserDtoParse.error?.issues });
+      return res.status(400).json({ message: UpdateUserDtoParse.error.issues });
     }
 
     const userData = { ...UpdateUserDtoParse.data };

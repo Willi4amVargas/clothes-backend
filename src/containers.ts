@@ -52,6 +52,7 @@ export const productsController = new ProductsController(
 );
 export const productsUnitsController = new ProductsUnitsController(
   productsUnitsService,
+  productsStockService,
 );
 
 export const inventoryOperationDetailsService =

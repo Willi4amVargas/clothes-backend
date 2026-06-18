@@ -1,10 +1,14 @@
 import { Request, Response } from "express";
 
+import { ProductsStockService } from "@/products_stock/products_stock.service";
 import { CreateProductUnitDto } from "@/products_units/dto/create-product-unit.dto";
 import { ProductsUnitsService } from "@/products_units/products_units.service";
 
 export class ProductsUnitsController {
-  constructor(private productsUnitsService: ProductsUnitsService) {}
+  constructor(
+    private productsUnitsService: ProductsUnitsService,
+    private productsStockService: ProductsStockService,
+  ) {}
 
   create = async (req: Request, res: Response) => {
     const isDryRun = res.locals.dry_run;
@@ -28,7 +32,7 @@ export class ProductsUnitsController {
     if (!createProductUnitDtoParse.success) {
       return res
         .status(400)
-        .json({ message: createProductUnitDtoParse.error?.issues });
+        .json({ message: createProductUnitDtoParse.error.issues });
     }
 
     const unit = createProductUnitDtoParse.data;
@@ -45,7 +49,10 @@ export class ProductsUnitsController {
         });
       }
       const newUnit = await this.productsUnitsService.create(+id, unit);
-      return res.status(201).json(newUnit);
+      const newStock = await this.productsStockService.create(+id, newUnit.id, {
+        stock: 0,
+      });
+      return res.status(201).json({ ...newUnit, stock: newStock });
     } catch (error: any) {
       if (error.message) {
         return res.status(400).json({ message: error.message });

@@ -3,7 +3,7 @@ import { Pool } from "pg";
 import { User } from "@/users/models/User";
 
 export class UsersService {
-  constructor(private repository: Pool) { }
+  constructor(private repository: Pool) {}
 
   // this is not in use for now
   // getAll = async (): Promise<User[]> => {
@@ -14,6 +14,26 @@ export class UsersService {
   //     throw new Error("Error fetching users");
   //   }
   // };
+
+  getBasicInfo = async (
+    id: number,
+  ): Promise<null | Omit<
+    User,
+    | "email"
+    | "password"
+    | "recovery_token"
+    | "recovery_token_expires_at"
+    | "status"
+  >> => {
+    const user = await this.repository.query(
+      "SELECT code, p.description as profile, u.description FROM public.users u INNER JOIN profile p ON p.id = u.profile where u.id = $1::numeric",
+      [id],
+    );
+    if (user.rows.length <= 0) {
+      return null;
+    }
+    return user.rows[0];
+  };
 
   getOne = async (code: string): Promise<null | User> => {
     try {
@@ -51,18 +71,14 @@ export class UsersService {
     }
   };
 
-  setRecoveryCode = async (
-    id: number,
-    hashedCode: string,
-    expiresAt: Date,
-  ) => {
+  setRecoveryCode = async (id: number, hashedCode: string, expiresAt: Date) => {
     try {
       await this.repository.query(
         "UPDATE public.users SET recovery_token=$1::text, recovery_token_expires_at=$2::timestamp WHERE id=$3::numeric",
         [hashedCode, expiresAt, id],
       );
     } catch (error: any) {
-      throw new Error(error.message || "Error setting recovery code");
+      throw new Error(error.message ?? "Error setting recovery code");
     }
   };
 
@@ -85,15 +101,15 @@ export class UsersService {
           id,
         ],
       );
-      const { password, ...updatedUserReturn } = result.rows[0]
-      return updatedUserReturn
+      const { password, ...updatedUserReturn } = result.rows[0];
+      return updatedUserReturn;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
       }
       throw new Error("Error fetching user");
     }
-  }
+  };
 
   updatePassword = async (id: number, hashedPassword: string) => {
     try {
@@ -102,7 +118,7 @@ export class UsersService {
         [hashedPassword, id],
       );
     } catch (error: any) {
-      throw new Error(error.message || "Error updating password");
+      throw new Error(error.message ?? "Error updating password");
     }
   };
 }

@@ -30,9 +30,7 @@ export class InventoryOperationService {
       total_tax: 0,
     };
 
-    for (let i = 0; i < details.length; i++) {
-      const iod = details[i];
-
+    for (const iod of details) {
       result.total += iod.total;
       result.total_net += iod.total_cost;
       result.total_tax += iod.total_tax;
@@ -48,7 +46,7 @@ export class InventoryOperationService {
       const emissionDate = DateUtils.getDateFormated(new Date());
       const result = await this.repository.query(
         `
-        INSERT INTO inventory_operation (operation_type, document_no, emission_date, description, total, total_net, total_tax, user_id, total_details, total_amount)VALUES($1::text, $2::text, $3::date, $4::text, $5::numeric, $6::numeric, $7::numeric, $8::numeric, $9::numeric, $10::numeric) RETURNING *
+        INSERT INTO inventory_operation (operation_type, document_no, emission_date, description, total, total_net, total_tax, user_id, total_details, total_amount)VALUES($1, $2::text, $3::date, $4::text, $5::numeric, $6::numeric, $7::numeric, $8::numeric, $9::numeric, $10::numeric) RETURNING *
         `,
         [
           inventoryOperation.operation_type,
