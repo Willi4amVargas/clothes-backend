@@ -171,16 +171,20 @@ export class ProductsController {
       }
       const params = paramsDtoParse.data;
 
-      const products = await this.productsService.getAll();
+      const products = params.ids
+        ? await this.productsService.getAll(params.ids)
+        : await this.productsService.getAll();
       const productsId = products.map((p) => p.id);
 
-      const productsStock = params.stock
-        ? await this.productsStockService.getAll(productsId)
-        : [];
+      const productsStock =
+        params.stock && productsId.length > 0
+          ? await this.productsStockService.getAll(productsId)
+          : [];
 
-      const productsUnits = params.units
-        ? await this.productsUnitsService.getAll(productsId)
-        : [];
+      const productsUnits =
+        params.units && productsId.length > 0
+          ? await this.productsUnitsService.getAll(productsId)
+          : [];
 
       const productsResponse: any[] = [];
       for (const product of products) {
@@ -188,7 +192,7 @@ export class ProductsController {
           ...product,
           stock: productsStock.filter((p) => p.product_id === product.id),
           units: productsUnits.filter((p) => p.product_id === product.id),
-        })
+        });
       }
 
       return res.json(productsResponse);

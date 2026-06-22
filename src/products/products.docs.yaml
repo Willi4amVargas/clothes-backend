@@ -4,6 +4,25 @@ paths:
       description: Devuelve la lista de todos los productos
       tags:
         - Productos
+      parameters:
+        - name: ids
+          in: query
+          description: Arreglo de IDs de productos para filtrar separados por ","
+          required: false
+          schema:
+            type: string
+        - name: stock
+          in: query
+          description: Filtrar productos que tengan stock disponible
+          required: false
+          schema:
+            type: boolean
+        - name: units
+          in: query
+          description: Filtrar o incluir unidades del producto
+          required: false
+          schema:
+            type: boolean
       responses:
         200:
           description: Retorna un array con todos los productos

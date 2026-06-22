@@ -24,6 +24,8 @@ jobs:
           script: |
             echo "🚀 Iniciando despliegue automático..."
             cd /etc/sysred/backend || exit
+            echo "📥 Revirtiendo cualquier cambio realizado"
+            git restore .
             echo "📥 Descargando nuevos cambios..."
             git pull
             echo "📦 Instalando dependencias..."

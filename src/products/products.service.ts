@@ -49,9 +49,13 @@ export class ProductsService {
       throw new Error("Error deleting product");
     }
   };
-  getAll = async (): Promise<Product[]> => {
+  getAll = async (ids?: number[]): Promise<Product[]> => {
     try {
-      const result = await this.repository.query("SELECT * FROM products");
+      let query = "SELECT * FROM products";
+      if (ids) {
+        query += ` WHERE id IN ( ${ids.map((_, index) => `\$${index + 1}::numeric`).join(", ")} )`;
+      }
+      const result = await this.repository.query(query, ids);
       return result.rows;
     } catch (error: any) {
       if (error.message) {
