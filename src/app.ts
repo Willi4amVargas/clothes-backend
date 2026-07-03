@@ -10,15 +10,18 @@ import { logger } from "@/config/logger";
 import InventoryOperationRoute from "@/inventory_operation/inventory_operation.route";
 import ProductsRoute from "@/products/products.route";
 import ProductsUnitsRoute from "@/products_units/products_units.route";
+import ReportsRoute from "@/reports/reports.route";
 import SalesOperationRoute from "@/sales_operation/sales_operation.route";
 import ShoppingOperationRoute from "@/shopping_operation/shopping_operation.route";
 import SwaggerRoute from "@/swagger/swagger.route";
 import UserRoute from "@/users/users.route";
 
+import { env } from "./config/env";
+
 export const boostrap = (): Express => {
   const app = express();
   app.use(express.json());
-  app.use(logger);
+  if (env.NODE_ENV !== "production") app.use(logger);
   app.use(cors());
 
   app.use("/api", SwaggerRoute);
@@ -37,5 +40,6 @@ export const boostrap = (): Express => {
     ShoppingOperationRoute,
     UserRoute,
   ]);
+  app.use("/api/reports", [ReportsRoute]);
   return app;
 };

@@ -1,0 +1,21 @@
+paths:
+  /reports/clients/{id}/sales:
+    get:
+      description: Devuelve las operaciones relacionadas con ventas de un cliente
+      tags:
+        - Reportes
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: number
+      responses:
+        200:
+          description: Devuelve un listado de las operaciones de ventas en la base de datos del cliente
+        401:
+          description: No autorizado
+        500:
+          description: Error interno del servidor
+      security:
+        - bearerAuth: []

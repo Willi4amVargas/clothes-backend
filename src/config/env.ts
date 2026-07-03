@@ -13,6 +13,7 @@ interface IEnvirontmentVariables {
   MAIL_PASSWORD: string;
   MAIL_PORT: number;
   MAIL_USERNAME: string;
+  NODE_ENV: string;
   PORT: number;
 }
 

@@ -24,7 +24,7 @@ const options: swaggerJsdoc.Options = {
       {
         description: "Servidor actual",
         url: "/api",
-      }
+      },
     ],
     tags: [
       {
@@ -47,8 +47,12 @@ const options: swaggerJsdoc.Options = {
         description: "Operaciones relacionadas con las compras",
         name: "Compras",
       },
+      {
+        description: "Reportes del sistema",
+        name: "Reportes",
+      },
     ],
-  }
+  },
 };
 
 const router = Router();

@@ -26,6 +26,9 @@ import { TemplateService } from "@/templates/template.service";
 import { UserController } from "@/users/users.controller";
 import { UsersService } from "@/users/users.service";
 
+import { ReportsController } from "./reports/reports.controller";
+import { ReportsService } from "./reports/reports.service";
+
 export const templateService = new TemplateService();
 export const storageService = new StorageService();
 
@@ -102,3 +105,6 @@ export const userController = new UserController(
   mailService,
   templateService,
 );
+
+export const reportsService = new ReportsService(pool);
+export const reportsController = new ReportsController(reportsService);

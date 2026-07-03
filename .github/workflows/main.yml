@@ -30,6 +30,8 @@ jobs:
             git pull
             echo "📦 Instalando dependencias..."
             pnpm install
+            echo "Haciendo builds"
+            pnpm approve-builds --all
             echo "🛠️ Compilando la aplicación..."
             pnpm run build
             echo "🔄 Reiniciando aplicación..."
