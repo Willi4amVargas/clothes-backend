@@ -200,7 +200,7 @@ export class SalesOperationController {
       }
       return res.json({
         ...createdSalesOperation,
-        sales_operation_detail: createdSalesOperationDetails,
+        sales_operation_details: createdSalesOperationDetails,
       });
     } catch (error: any) {
       if (error.message) {

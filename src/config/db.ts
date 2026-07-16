@@ -28,7 +28,11 @@ const testConnection = async (): Promise<boolean | undefined> => {
 };
 testConnection()
   .then((e) => {
-    console.log(e);
+    if (typeof e === "boolean") {
+      console.log("Successfully connect to database", e);
+    } else {
+      console.log("Query executed but don't return a boolean", e);
+    }
   })
   .catch((e: unknown) => {
     console.log(e);
