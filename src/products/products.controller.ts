@@ -5,6 +5,7 @@ import { UpdateProductDto } from "@/products/dto/update-product.dto";
 import { ProductsService } from "@/products/products.service";
 import { ProductsStockService } from "@/products_stock/products_stock.service";
 import { ProductsUnitsService } from "@/products_units/products_units.service";
+import { redisClient } from "@/redis/redis.client";
 import { StorageService } from "@/storage/storage.service";
 
 import { GetAllProductsParamsDto } from "./dto/get-all-products.dto";
@@ -65,6 +66,7 @@ export class ProductsController {
         ),
       );
       const result = { ...newProduct, stock: newStock, units: newUnits };
+      await redisClient.del(`cache:${req.originalUrl || req.url}`)
       res.status(201).json(result);
     } catch (error: any) {
       if (error.message) {
@@ -104,6 +106,7 @@ export class ProductsController {
         });
       }
       await this.productsService.delete(+id);
+      await redisClient.del(`cache:${req.originalUrl || req.url}`)
       res.json({ message: "Product deleted successfully" });
     } catch (error: any) {
       if (error.message) {
@@ -310,6 +313,7 @@ export class ProductsController {
         );
       }
       const result = { ...updatedProduct, products_units: updatedProductUnits };
+      await redisClient.del(`cache:${req.originalUrl || req.url}`)
       res.status(201).json(result);
     } catch (error: any) {
       if (error.message) {

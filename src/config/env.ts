@@ -15,6 +15,11 @@ interface IEnvirontmentVariables {
   MAIL_USERNAME: string;
   NODE_ENV: string;
   PORT: number;
+  REDIS_DB: string;
+  REDIS_HOST: string;
+  REDIS_PASSWORD: string;
+  REDIS_PORT: string;
+  REDIS_USERNAME: string;
 }
 
 export const env: IEnvirontmentVariables =

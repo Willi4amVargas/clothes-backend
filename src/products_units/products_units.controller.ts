@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { ProductsStockService } from "@/products_stock/products_stock.service";
 import { CreateProductUnitDto } from "@/products_units/dto/create-product-unit.dto";
 import { ProductsUnitsService } from "@/products_units/products_units.service";
+import { redisClient } from "@/redis/redis.client";
 
 export class ProductsUnitsController {
   constructor(
@@ -52,6 +53,7 @@ export class ProductsUnitsController {
       const newStock = await this.productsStockService.create(+id, newUnit.id, {
         stock: 0,
       });
+      await redisClient.del(`cache:/api/products/${id}`)
       return res.status(201).json({ ...newUnit, stock: newStock });
     } catch (error: any) {
       if (error.message) {

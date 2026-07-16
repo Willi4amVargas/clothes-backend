@@ -17,12 +17,14 @@ import SwaggerRoute from "@/swagger/swagger.route";
 import UserRoute from "@/users/users.route";
 
 import { env } from "./config/env";
+import { limiter } from "./redis/redis.middleware";
 
 export const boostrap = (): Express => {
   const app = express();
   app.use(express.json());
   if (env.NODE_ENV !== "production") app.use(logger);
   app.use(cors());
+  app.use(limiter);
 
   app.use("/api", SwaggerRoute);
 
