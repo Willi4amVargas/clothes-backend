@@ -6,6 +6,7 @@ import { InventoryOperationDetailsService } from "@/inventory_operation_details/
 import { ProductsService } from "@/products/products.service";
 import { ProductsStockService } from "@/products_stock/products_stock.service";
 import { ProductsUnitsService } from "@/products_units/products_units.service";
+import { redisClient } from "@/redis/redis.client";
 
 export class InventoryOperationController {
   constructor(
@@ -147,7 +148,7 @@ export class InventoryOperationController {
           }
         }),
       );
-
+      await redisClient.del(`cache:/api/products/`);
       return res.json({
         ...createdInventoryOperation,
         inventory_operation_details: createdInventoryOperationDetails,

@@ -10,6 +10,7 @@ import { SalesOperationDetail } from "@/sales_operation_details/models/SalesOper
 import { SalesOperationDetailsService } from "@/sales_operation_details/sales_operation_details.service";
 
 import { CreateSalesOperationDto } from "./dto/create-sales-operation.dto";
+import { redisClient } from "@/redis/redis.client";
 
 export class SalesOperationController {
   constructor(
@@ -198,6 +199,7 @@ export class SalesOperationController {
           ),
         );
       }
+      await redisClient.del(`cache:/api/products/`)
       return res.json({
         ...createdSalesOperation,
         sales_operation_details: createdSalesOperationDetails,
