@@ -24,6 +24,7 @@ export const boostrap = (): Express => {
   app.use(express.json());
   if (env.NODE_ENV !== "production") app.use(logger);
   app.use(cors());
+  app.set('trust proxy', 2);
   app.use(limiter);
 
   app.use("/api", SwaggerRoute);
