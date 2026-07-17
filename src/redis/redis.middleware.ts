@@ -28,6 +28,7 @@ export const cacheMiddleware = (durationInSeconds = 3600) => {
 
       if (cachedData) {
         // console.log(`[Caché HIT] Sirviendo: ${cacheKey}`);
+        res.setHeader('X-Redis-Cache', 'HIT');
         return res.json(JSON.parse(cachedData));
       }
 
@@ -53,6 +54,7 @@ export const cacheMiddleware = (durationInSeconds = 3600) => {
       };
 
       // Continuamos al controlador (Controller/Ruta) que consulta la base de datos
+      res.setHeader('X-Redis-Cache', 'MISS');
       next();
     } catch (error) {
       console.error("Error en el middleware de Redis:", error);
