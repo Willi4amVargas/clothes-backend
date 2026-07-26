@@ -35,8 +35,12 @@ export const publicRoutes: IPublicRoutes[] = [
     method: "GET",
     route: "^/api/products/[^/]+/?$",
   },
-    {
+  {
     method: "GET",
     route: "^/api/products/marks/?$",
   },
+  {
+    method: "POST",
+    route: "^/api/signup/?$",
+  }
 ] as const;

@@ -31,6 +31,7 @@ import { ReportsService } from "./reports/reports.service";
 
 export const templateService = new TemplateService();
 export const storageService = new StorageService();
+export const mailService = new MailService(transporter);
 
 export const appService = new AppService();
 export const appController = new AppController(appService);
@@ -38,7 +39,7 @@ export const appController = new AppController(appService);
 export const usersService = new UsersService(pool);
 
 export const authService = new AuthService(usersService);
-export const authController = new AuthController(authService);
+export const authController = new AuthController(authService, mailService, templateService, usersService);
 
 export const productsStockService = new ProductsStockService(pool);
 
@@ -97,8 +98,6 @@ export const shoppingOperationController = new ShoppingOperationController(
   productsUnitsService,
   productsStockService,
 );
-
-export const mailService = new MailService(transporter);
 
 export const userController = new UserController(
   usersService,

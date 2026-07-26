@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bienvenido - Cuenta Creada Exitosamente</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 500px;
+        margin: 30px auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+      .header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+      .header h2 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .content {
+        padding: 30px;
+        color: #333333;
+        line-height: 1.5;
+      }
+      .details-card {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 15px 20px;
+        margin: 20px 0;
+      }
+      .details-item {
+        margin-bottom: 10px;
+        font-size: 14px;
+      }
+      .details-item:last-child {
+        margin-bottom: 0;
+      }
+      .details-label {
+        font-weight: bold;
+        color: #555555;
+      }
+      .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        font-size: 12px;
+        font-weight: bold;
+        border-radius: 4px;
+        color: white;
+      }
+      .badge-success {
+        background-color: #27ae60;
+      }
+      .badge-inactive {
+        background-color: #e74c3c;
+      }
+      .code-box {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2c3e50;
+        background-color: #eef2f7;
+        padding: 10px 15px;
+        text-align: center;
+        border-radius: 6px;
+        margin: 15px 0;
+        letter-spacing: 1px;
+        font-family: monospace;
+      }
+      .footer {
+        background-color: #f9f9f9;
+        padding: 15px;
+        text-align: center;
+        font-size: 12px;
+        color: #777777;
+        border-top: 1px solid #eeeeee;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>¡Bienvenido! Cuenta Creada</h2>
+      </div>
+      <div class="content">
+        <p>Hola,</p>
+        <p>
+          Tu cuenta ha sido registrada exitosamente en nuestra plataforma. A
+          continuación encontrarás los detalles de tu registro:
+        </p>
+
+        <div class="details-card">
+          <div class="details-item">
+            <span class="details-label">ID de usuario:</span> {{id}}
+          </div>
+          <div class="details-item">
+            <span class="details-label">Correo electrónico:</span> {{email}}
+          </div>
+          <div class="details-item">
+            <span class="details-label">Perfil / Rol:</span> {{profile}}
+          </div>
+          <div class="details-item">
+            <span class="details-label">Descripción:</span> {{description}}
+          </div>
+          <div class="details-item">
+            <span class="details-label">Estado:</span>
+            <!-- Si tu motor de plantillas permite condicionales: -->
+            <!-- {{#if status}} -->
+            <span class="badge badge-success">Activo</span>
+            <!-- {{else}} -->
+            <!-- <span class="badge badge-inactive">Inactivo</span> -->
+            <!-- {{/if}} -->
+          </div>
+        </div>
+
+        <p>Tu código de identificación/referencia asignado es:</p>
+        <div class="code-box">{{code}}</div>
+
+        <p>
+          Ya puedes acceder a la plataforma y disfrutar de nuestros servicios.
+        </p>
+      </div>
+      <div class="footer">
+        <p>Si no realizaste este registro, por favor contacta con nuestro equipo de soporte.</p>
+        <p>&copy; Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </body>
+</html>

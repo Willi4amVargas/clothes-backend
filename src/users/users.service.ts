@@ -1,9 +1,10 @@
 import { Pool } from "pg";
 
 import { User } from "@/users/models/User";
+import { hashPassword } from "@/lib/hash.utils";
 
 export class UsersService {
-  constructor(private repository: Pool) {}
+  constructor(private repository: Pool) { }
 
   // this is not in use for now
   // getAll = async (): Promise<User[]> => {
@@ -16,15 +17,8 @@ export class UsersService {
   // };
 
   getBasicInfo = async (
-    id: number,
-  ): Promise<null | Omit<
-    User,
-    | "email"
-    | "password"
-    | "recovery_token"
-    | "recovery_token_expires_at"
-    | "status"
-  >> => {
+    id: number
+  ): Promise<null | Omit<User, | "email" | "password" | "recovery_token" | "recovery_token_expires_at" | "status">> => {
     const user = await this.repository.query(
       "SELECT code, p.description as profile, u.description FROM public.users u INNER JOIN profile p ON p.id = u.profile where u.id = $1::numeric",
       [id],
@@ -53,10 +47,10 @@ export class UsersService {
     }
   };
 
-  getOnebyId = async (id: number): Promise<null | User> => {
+  getOnebyId = async (id: number): Promise<null | Omit<User, | "email" | "password" | "recovery_token" | "recovery_token_expires_at">> => {
     try {
       const result = await this.repository.query(
-        "SELECT * FROM users WHERE id = $1::numeric",
+        "SELECT code, p.description as profile, u.description, u.status FROM public.users u INNER JOIN profile p ON p.id = u.profile where u.id = $1::numeric",
         [id],
       );
       if (result.rows.length <= 0) {
@@ -121,4 +115,31 @@ export class UsersService {
       throw new Error(error.message ?? "Error updating password");
     }
   };
+
+  create = async (user: Omit<User, "id" | "recovery_token" | "recovery_token_expires_at" | "status">): Promise<Omit<User, "password">> => {
+    try {
+      const codeExist = await this.getOne(user.code)
+      if (codeExist) {
+        throw new Error("User with this code already exist");
+      }
+
+      const hasPassword = hashPassword(user.password)
+
+      const data = await this.repository.query("INSERT INTO public.users (profile, code, password, description, email, status) VALUES($1::numeric, $2::text, $3::text, $4::text, $5::text, true) RETURNING *",
+        [
+          user.profile,
+          user.code,
+          hasPassword,
+          user.description,
+          user.email
+        ]
+      )
+
+      const { password, ...userInfo } = data.rows[0]
+
+      return userInfo
+    } catch (error: any) {
+      throw new Error(error.message ?? "Error creating user");
+    }
+  }
 }
