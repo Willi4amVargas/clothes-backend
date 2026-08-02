@@ -5,6 +5,6 @@ export const CreateUserDto = z.object({
   description: z.string().min(2),
   email: z.email(),
   password: z.string().min(2),
-  profile: z.number().min(0),
+  profile: z.string(),
   status: z.boolean(),
 });

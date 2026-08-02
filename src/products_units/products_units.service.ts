@@ -1,32 +1,22 @@
-import { Pool } from "pg";
-
+import { products_units } from "#/client";
+import { repository } from "@/config/prisma";
 import { ProductsService } from "@/products/products.service";
-import { ProductUnit } from "@/products_units/models/ProductUnit";
 
 export class ProductsUnitsService {
-  constructor(
-    private repository: Pool,
-    private productsService: ProductsService,
-  ) {}
+  constructor(private productsService: ProductsService) {}
 
   create = async (
-    product_id: number,
-    unit: Omit<ProductUnit, "id" | "product_id">,
-  ): Promise<ProductUnit> => {
+    product_id: string,
+    unit: Omit<products_units, "id" | "product_id">,
+  ) => {
     try {
-      const productExist = await this.productsService.getOne(product_id);
-
-      if (!productExist) {
-        throw new Error("Product not found");
-      }
-
-      const result = await this.repository.query(
-        `
-        INSERT INTO public.products_units (unit, product_id, cost, price) VALUES($1::text, $2::numeric, $3::numeric, $4::numeric) RETURNING *
-        `,
-        [unit.unit, product_id, unit.cost, unit.price],
-      );
-      return result.rows[0];
+      const result = await repository.products_units.create({
+        data: {
+          product_id,
+          ...unit,
+        },
+      });
+      return result;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -35,12 +25,14 @@ export class ProductsUnitsService {
     }
   };
 
-  delete = async (product_id: number, id: number): Promise<void> => {
+  delete = async (product_id: string, id: string) => {
     try {
-      await this.repository.query(
-        "DELETE FROM products_units WHERE product_id = $1::numeric AND id = $2::numeric",
-        [product_id, id],
-      );
+      await repository.products_units.delete({
+        where: {
+          product_id,
+          id,
+        },
+      });
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -49,22 +41,26 @@ export class ProductsUnitsService {
     }
   };
 
-  getAll = async (product_id: number | number[]): Promise<ProductUnit[]> => {
-    const productIDIsArray = Array.isArray(product_id);
-    let query = "SELECT * FROM products_units";
-    if (productIDIsArray) {
-      query += ` WHERE product_id IN (${product_id
-        .map((_, index) => `\$${index + 1}::numeric`)
-        .join(", ")})`;
-    } else {
-      query += ` WHERE product_id = $1::numeric`;
-    }
+  getAll = async (product_id: string | string[]) => {
     try {
-      const result = await this.repository.query(
-        query,
-        productIDIsArray ? product_id : [product_id],
-      );
-      return result.rows;
+      const productIDIsArray = Array.isArray(product_id);
+      if (productIDIsArray) {
+        const result = await repository.products_units.findMany({
+          where: {
+            product_id: {
+              in: product_id,
+            },
+          },
+        });
+        return result;
+      } else {
+        const result = await repository.products_units.findMany({
+          where: {
+            product_id: product_id,
+          },
+        });
+        return result;
+      }
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -73,20 +69,15 @@ export class ProductsUnitsService {
     }
   };
 
-  getOne = async (
-    product_id: number,
-    id: number,
-  ): Promise<null | ProductUnit> => {
+  getOne = async (product_id: string, id: string) => {
     try {
-      const result = await this.repository.query(
-        "SELECT * FROM products_units WHERE product_id = $1::numeric AND id = $2::numeric",
-        [product_id, id],
-      );
-      if (result.rows.length <= 0) {
-        return null;
-      }
-
-      return result.rows[0];
+      const result = await repository.products_units.findUnique({
+        where: {
+          id,
+          product_id,
+        },
+      });
+      return result;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -96,10 +87,10 @@ export class ProductsUnitsService {
   };
 
   update = async (
-    product_id: number,
-    id: number,
-    unit: Partial<Omit<ProductUnit, "id" | "product_id">>,
-  ): Promise<ProductUnit> => {
+    product_id: string,
+    id: string,
+    unit: Partial<Omit<products_units, "id" | "product_id">>,
+  ) => {
     try {
       const productExist = await this.productsService.getOne(product_id);
 
@@ -115,20 +106,14 @@ export class ProductsUnitsService {
 
       const updateProductUnit = { ...existingUnitResult, ...unit };
 
-      const result = await this.repository.query(
-        `
-        UPDATE public.products_units SET unit=$1::text, cost=$2::numeric, price=$3::numeric WHERE id=$4::numeric AND product_id = $5::numeric RETURNING *
-        `,
-        //"UPDATE products_units SET unit = $1::text, main_unit = $2::boolean, cost = $3::numeric, price = $4::numeric WHERE product_code = $5::text AND correlative = $6::integer RETURNING *",
-        [
-          updateProductUnit.unit,
-          updateProductUnit.cost,
-          updateProductUnit.price,
+      const result = await repository.products_units.update({
+        data: updateProductUnit,
+        where: {
           id,
           product_id,
-        ],
-      );
-      return result.rows[0];
+        },
+      });
+      return result
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);

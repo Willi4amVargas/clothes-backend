@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model clients {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code            String            @db.VarChar
+  description     String?           @db.VarChar
+  client_id       String?           @db.VarChar
+  email           String?           @db.VarChar
+  phone           String?           @db.VarChar
+  country         String?           @db.VarChar
+  city            String?           @db.VarChar
+  address         String?           @db.VarChar
+  credit_days     Int?
+  credit_limit    Float?
+  discount        Float?
+  sales_operation sales_operation[]
+}
+
+model inventory_operation {
+  id                          String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  operation_type              inventory_operation_types
+  document_no                 String?                       @db.VarChar
+  emission_date               DateTime?                     @db.Timestamp(6)
+  description                 String?                       @db.VarChar
+  total                       Float?                        @default(0)
+  total_net                   Float?                        @default(0)
+  total_tax                   Float?                        @default(0)
+  user_id                     String?                       @db.Uuid
+  total_details               Int?                          @default(0)
+  total_amount                Float?                        @default(0)
+  users                       users?                        @relation(fields: [user_id], references: [id], onDelete: Restrict)
+  inventory_operation_details inventory_operation_details[]
+}
+
+model inventory_operation_details {
+  main_id             String              @db.Uuid
+  line                String              @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product_id          String?             @db.Uuid
+  description_product String?             @db.VarChar
+  amount              Float?
+  unit                String?             @db.Uuid
+  unitary_cost        Float?
+  aliquot             Float?
+  total_cost          Float?              @default(0)
+  total_tax           Float?              @default(0)
+  total               Float?              @default(0)
+  products            products?           @relation(fields: [product_id], references: [id], onDelete: Restrict, map: "inventory_operation_details_id_product_fkey")
+  inventory_operation inventory_operation @relation(fields: [main_id], references: [id], onDelete: Cascade)
+  products_units      products_units?     @relation(fields: [unit], references: [id], onDelete: Restrict)
+
+  @@id([main_id, line])
+}
+
+model marks {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description String
+  products    products[]
+}
+
+model products {
+  id                          String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                        String                        @db.VarChar
+  description                 String?                       @db.VarChar
+  mark_id                     String                        @db.Uuid
+  model                       String?                       @db.VarChar
+  referenc                    String?                       @db.VarChar
+  discount                    Float?
+  status                      Boolean?
+  origin                      String?                       @db.VarChar
+  buy_tax                     Float?
+  sale_tax                    Float?
+  image_url                   String?                       @default("") @db.VarChar
+  inventory_operation_details inventory_operation_details[]
+  products_stock              products_stock[]
+  products_units              products_units[]
+  sales_operation_details     sales_operation_details[]
+  shopping_operation_details  shopping_operation_details[]
+  mark                        marks                         @relation(fields: [mark_id], references: [id])
+}
+
+model products_stock {
+  product_id     String         @db.Uuid
+  unit           String         @db.Uuid
+  stock          Float          @default(0)
+  products       products       @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  products_units products_units @relation(fields: [unit], references: [id], onDelete: Cascade, map: "products_stock_product_unit_fkey")
+
+  @@id([product_id, unit])
+}
+
+model products_units {
+  id                          String                        @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unit                        String?                       @db.VarChar
+  product_id                  String                        @db.Uuid
+  cost                        Float?
+  price                       Float?
+  inventory_operation_details inventory_operation_details[]
+  products_stock              products_stock[]
+  products                    products                      @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  sales_operation_details     sales_operation_details[]
+  shopping_operation_details  shopping_operation_details[]
+
+  @@id([product_id, id])
+}
+
+model profile {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description String? @db.VarChar
+  users       users[] @relation("users_profileToprofile")
+}
+
+model sales_operation {
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  operation_type          sales_operation_types
+  document_no             String?                   @db.VarChar
+  emission_date           DateTime?                 @db.Timestamp(6)
+  client_id               String?                   @db.Uuid
+  seller                  String?                   @db.VarChar
+  credit_days             Int?
+  description             String?                   @db.VarChar
+  user_id                 String?                   @db.Uuid
+  total_amount            Float?                    @default(0)
+  percent_discount        Float?                    @default(0)
+  discount                Float?                    @default(0)
+  total_net               Float?                    @default(0)
+  total_exempt            Float?                    @default(0)
+  total_tax               Float?                    @default(0)
+  total                   Float?                    @default(0)
+  credit                  Float?                    @default(0)
+  cash                    Float?                    @default(0)
+  total_net_cost          Float?                    @default(0)
+  total_tax_cost          Float?                    @default(0)
+  total_cost              Float?                    @default(0)
+  total_count_details     Float?                    @default(0)
+  pending                 Boolean?
+  clients                 clients?                  @relation(fields: [client_id], references: [id], onDelete: Restrict)
+  users                   users?                    @relation(fields: [user_id], references: [id], onDelete: Restrict)
+  sales_operation_details sales_operation_details[]
+}
+
+model sales_operation_details {
+  main_id             String          @db.Uuid
+  line                String          @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product_id          String?         @db.Uuid
+  description_product String?         @db.VarChar
+  amount              Float?
+  unit                String?         @db.Uuid
+  unitary_cost        Float?
+  sale_aliquot        Float?
+  buy_aliquot         Float?
+  price               Float?          @default(0)
+  total_net_cost      Float?          @default(0)
+  total_tax_cost      Float?          @default(0)
+  total_cost          Float?          @default(0)
+  percent_discount    Float?          @default(0)
+  discount            Float?          @default(0)
+  total_net           Float?          @default(0)
+  total_tax           Float?          @default(0)
+  total               Float?          @default(0)
+  sales_operation     sales_operation @relation(fields: [main_id], references: [id], onDelete: Cascade)
+  products            products?       @relation(fields: [product_id], references: [id], onDelete: Restrict)
+  products_units      products_units? @relation(fields: [unit], references: [id], onDelete: Restrict)
+
+  @@id([main_id, line])
+}
+
+model shopping_operation {
+  id                         String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  operation_type             shopping_operation_types
+  document_no                String?                      @db.VarChar
+  emission_date              DateTime?                    @db.Timestamp(6)
+  provider_name              String?                      @db.VarChar
+  provider_id                String?                      @db.VarChar
+  provider_address           String?                      @db.VarChar
+  provider_phone             String?                      @db.VarChar
+  credit_days                Int?
+  expiration_date            DateTime?                    @db.Date
+  description                String?                      @db.VarChar
+  user_id                    String?                      @db.Uuid
+  total_amount               Float?                       @default(0)
+  total_count_details        Float?                       @default(0)
+  percent_discount           Float?                       @default(0)
+  discount                   Float?                       @default(0)
+  total_net                  Float?                       @default(0)
+  total_tax                  Float?                       @default(0)
+  total                      Float?                       @default(0)
+  credit                     Float?                       @default(0)
+  cash                       Float?                       @default(0)
+  users                      users?                       @relation(fields: [user_id], references: [id], onDelete: Restrict)
+  shopping_operation_details shopping_operation_details[]
+}
+
+model shopping_operation_details {
+  main_id             String             @db.Uuid
+  line                String             @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product_id          String?            @db.Uuid
+  description_product String?            @db.VarChar
+  amount              Float?
+  unit                String?            @db.Uuid
+  unitary_cost        Float?
+  percent_discount    Float?             @default(0)
+  discount            Float?             @default(0)
+  total_net           Float?             @default(0)
+  total_tax           Float?             @default(0)
+  total               Float?             @default(0)
+  buy_aliquot         Float?
+  shopping_operation  shopping_operation @relation(fields: [main_id], references: [id], onDelete: Cascade)
+  products            products?          @relation(fields: [product_id], references: [id], onDelete: Restrict)
+  products_units      products_units?    @relation(fields: [unit], references: [id], onDelete: Restrict)
+
+  @@id([main_id, line])
+}
+
+model users {
+  id                        String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profile_id                String                @db.Uuid
+  code                      String                @unique @db.VarChar
+  password                  String                @db.VarChar
+  description               String?               @db.VarChar
+  email                     String?               @db.VarChar
+  status                    Boolean?              @default(true)
+  recovery_token            String?               @db.VarChar
+  recovery_token_expires_at DateTime?             @db.Timestamp(6)
+  inventory_operation       inventory_operation[]
+  sales_operation           sales_operation[]
+  shopping_operation        shopping_operation[]
+  profile                   profile?              @relation("users_profileToprofile", fields: [profile_id], references: [id], onDelete: Restrict)
+}
+
+model numeration {
+  module          modules
+  type            module_types
+  last_numeration Int          @default(0)
+  prefix          String       @default("")
+
+  @@id([module, type])
+}
+
+enum inventory_operation_types {
+  LOAD
+  DOWNLOAD
+}
+
+enum sales_operation_types {
+  SALE
+  QUOTATION
+  ORDER
+}
+
+enum shopping_operation_types {
+  SHOPPING
+  EXPENSE
+}
+
+enum modules {
+  SALES
+  SHOPPING
+  INVENTORY_OPERATION
+}
+
+enum module_types {
+  LOAD
+  DOWNLOAD
+
+  SALE
+  QUOTATION
+  ORDER
+
+  SHOPPING
+  EXPENSE
+}

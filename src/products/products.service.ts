@@ -1,30 +1,15 @@
-import { Pool } from "pg";
-
-import { Product } from "@/products/models/Product";
+import { products } from "#/client";
+import { repository } from "@/config/prisma";
 
 export class ProductsService {
-  constructor(private repository: Pool) {}
+  constructor() {}
 
-  create = async (product: Omit<Product, "id">): Promise<Product> => {
+  create = async (product: Omit<products, "id">) => {
     try {
-      const result = await this.repository.query(
-        `
-        INSERT INTO public.products (code, description, mark, model, referenc, discount, status, origin, buy_tax, sale_tax) VALUES($1::text, $2::text, $3::text, $4::text, $5::text, $6::numeric, $7::boolean, $8::text, $9::numeric, $10::numeric) RETURNING *
-        `,
-        [
-          product.code,
-          product.description,
-          product.mark,
-          product.model,
-          product.referenc,
-          product.discount,
-          product.status,
-          product.origin,
-          product.buy_tax,
-          product.sale_tax,
-        ],
-      );
-      return result.rows[0];
+      const result = await repository.products.create({
+        data: product,
+      });
+      return result;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -32,16 +17,11 @@ export class ProductsService {
       throw new Error("Error creating product");
     }
   };
-  delete = async (id: number): Promise<void> => {
+  delete = async (id: string) => {
     try {
-      const existingProduct = await this.getOne(id);
-      if (!existingProduct) {
-        throw new Error("Product not found");
-      }
-      await this.repository.query(
-        "DELETE FROM products WHERE id = $1::numeric",
-        [id],
-      );
+      await repository.products.delete({
+        where: { id },
+      });
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -49,14 +29,16 @@ export class ProductsService {
       throw new Error("Error deleting product");
     }
   };
-  getAll = async (ids?: number[]): Promise<Product[]> => {
+  getAll = async (ids?: string[]) => {
     try {
-      let query = "SELECT * FROM products";
-      if (ids) {
-        query += ` WHERE id IN ( ${ids.map((_, index) => `\$${index + 1}::numeric`).join(", ")} )`;
-      }
-      const result = await this.repository.query(query, ids);
-      return result.rows;
+      const results = await repository.products.findMany({
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+      });
+      return results;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -65,14 +47,14 @@ export class ProductsService {
     }
   };
 
-  getMarks = async (): Promise<string[]> => {
+  getMarks = async () => {
     try {
-      const result = await this.repository.query(
-        `
-        SELECT mark FROM products GROUP BY mark ORDER BY mark ASC
-        `,
-      );
-      return result.rows;
+      const result = await repository.marks.findMany({
+        orderBy: {
+          description: "asc",
+        },
+      });
+      return result;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.messgae);
@@ -81,16 +63,14 @@ export class ProductsService {
     }
   };
 
-  getOne = async (id: number): Promise<null | Product> => {
+  getOne = async (id: string) => {
     try {
-      const result = await this.repository.query(
-        "SELECT * FROM products WHERE id = $1::numeric",
-        [id],
-      );
-      if (result.rows.length <= 0) {
-        return null;
-      }
-      return result.rows[0];
+      const result = await repository.products.findUnique({
+        where: {
+          id,
+        },
+      });
+      return result;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -99,10 +79,7 @@ export class ProductsService {
     }
   };
 
-  update = async (
-    id: number,
-    product: Partial<Omit<Product, "id">>,
-  ): Promise<Product> => {
+  update = async (id: string, product: Partial<Omit<products, "id">>) => {
     try {
       // this is in use for getting last values and update only the requireds
       const existingProduct = await this.getOne(id);
@@ -110,25 +87,14 @@ export class ProductsService {
         throw new Error("Product not found");
       }
       const updatedProduct = { ...existingProduct, ...product };
-      const result = await this.repository.query(
-        `
-        UPDATE public.products SET code=$1::text, description=$2::text, mark=$3::text, model=$4::text, referenc=$5::text, discount=$6::numeric, status=$7::boolean, origin=$8::text, buy_tax=$9::numeric, sale_tax=$10::numeric WHERE id=$11::numeric RETURNING *
-        `,
-        [
-          updatedProduct.code,
-          updatedProduct.description,
-          updatedProduct.mark,
-          updatedProduct.model,
-          updatedProduct.referenc,
-          updatedProduct.discount,
-          updatedProduct.status,
-          updatedProduct.origin,
-          updatedProduct.buy_tax,
-          updatedProduct.sale_tax,
+      const result = await repository.products.update({
+        where: {
           id,
-        ],
-      );
-      return result.rows[0];
+        },
+        data: updatedProduct,
+      });
+
+      return result;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -136,15 +102,17 @@ export class ProductsService {
       throw new Error("Error updating product");
     }
   };
-  updateImageUrl = async (id: number, image_url?: string) => {
+  updateImageUrl = async (id: string, image_url?: string) => {
     try {
-      const result = await this.repository.query(
-        `
-        UPDATE public.products SET image_url=$1::text WHERE id=$2::numeric RETURNING *
-        `,
-        [image_url, id],
-      );
-      return result.rows[0];
+      const result = await repository.products.update({
+        data: {
+          image_url,
+        },
+        where: {
+          id,
+        },
+      });
+      return result;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);

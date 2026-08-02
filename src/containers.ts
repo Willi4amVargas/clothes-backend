@@ -28,6 +28,7 @@ import { UsersService } from "@/users/users.service";
 
 import { ReportsController } from "./reports/reports.controller";
 import { ReportsService } from "./reports/reports.service";
+import { ProfileService } from "./profile/profile.service";
 
 export const templateService = new TemplateService();
 export const storageService = new StorageService();
@@ -36,10 +37,11 @@ export const mailService = new MailService(transporter);
 export const appService = new AppService();
 export const appController = new AppController(appService);
 
-export const usersService = new UsersService(pool);
+export const profileService = new ProfileService()
+export const usersService = new UsersService();
 
-export const authService = new AuthService(usersService);
-export const authController = new AuthController(authService, mailService, templateService, usersService);
+export const authService = new AuthService(usersService, mailService, templateService, profileService);
+export const authController = new AuthController(authService,);
 
 export const productsStockService = new ProductsStockService(pool);
 
@@ -61,7 +63,7 @@ export const productsUnitsController = new ProductsUnitsController(
 
 export const inventoryOperationDetailsService =
   new InventoryOperationDetailsService(pool);
-export const inventoryOperationService = new InventoryOperationService(pool);
+export const inventoryOperationService = new InventoryOperationService();
 export const inventoryOperationController = new InventoryOperationController(
   inventoryOperationService,
   inventoryOperationDetailsService,
@@ -70,7 +72,7 @@ export const inventoryOperationController = new InventoryOperationController(
   productsStockService,
 );
 
-export const clientsService = new ClientsService(pool);
+export const clientsService = new ClientsService();
 export const clientsController = new ClientsController(clientsService);
 
 export const salesOperationDetailsService = new SalesOperationDetailsService(

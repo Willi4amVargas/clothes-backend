@@ -82,7 +82,7 @@ paths:
           name: id
           required: true
           schema:
-            type: number
+            type: string
       responses:
         200:
           description: Retorna el cliente encontrado
@@ -103,7 +103,7 @@ paths:
           name: id
           required: true
           schema:
-            type: number
+            type: string
         - in: query
           name: dry_run
           required: false
@@ -160,7 +160,7 @@ paths:
           name: id
           required: true
           schema:
-            type: number
+            type: string
         - in: query
           name: dry_run
           required: false

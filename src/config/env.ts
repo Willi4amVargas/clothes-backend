@@ -1,4 +1,10 @@
-interface IEnvirontmentVariables {
+import dotenv from 'dotenv';
+
+const envFile = `.env.${process.env.NODE_ENV || 'development'}`;
+
+dotenv.config({ path: envFile });
+
+export interface IEnvironmentVariables {
   DB_HOST: string;
   DB_NAME: string;
   DB_PASSWORD: string;
@@ -22,5 +28,4 @@ interface IEnvirontmentVariables {
   REDIS_USERNAME: string;
 }
 
-export const env: IEnvirontmentVariables =
-  process.env as unknown as IEnvirontmentVariables;
+export const env = process.env as unknown as IEnvironmentVariables;

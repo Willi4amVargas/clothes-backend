@@ -1,29 +1,28 @@
-import { Pool } from "pg";
-
-import { Profile } from "@/profile/models/Profile";
+import { repository } from "@/config/prisma";
 
 export class ProfileService {
-  constructor(private repository: Pool) {}
+  constructor() { }
 
-  getAll = async (): Promise<Profile[]> => {
+  getAll = async () => {
     try {
-      const result = await this.repository.query("SELECT * FROM profiles");
-      return result.rows;
+      const profiles = await repository.profile.findMany()
+      return profiles
     } catch (error) {
       throw new Error("Error fetching profiles");
     }
   };
 
-  getOne = async (code: string): Promise<null | Profile> => {
+  getOne = async (code: string) => {
     try {
-      const result = await this.repository.query(
-        "SELECT * FROM profiles WHERE code = $1::text",
-        [code],
-      );
-      if (result.rows.length <= 0) {
+      const profile = await repository.profile.findUnique({
+        where: {
+          id: code
+        }
+      })
+      if (!profile) {
         return null;
       }
-      return result.rows[0];
+      return profile
     } catch (error) {
       throw new Error("Error fetching profile");
     }

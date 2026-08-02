@@ -1,29 +1,15 @@
-import { Pool } from "pg";
-
-import { Client } from "./models/Client";
+import { clients } from "#/client";
+import { repository } from "@/config/prisma";
 
 export class ClientsService {
-  constructor(private repository: Pool) {}
+  constructor() { }
 
-  create = async (client: Omit<Client, "id">): Promise<Client> => {
+  create = async (client: Omit<clients, "id">) => {
     try {
-      const result = await this.repository.query(
-        `INSERT INTO public.clients (code, description, client_id, email, phone, country, city, address, credit_days, credit_limit, discount) VALUES($1::text, $2::text, $3::text, $4::text, $5::text, $6::text, $7::text, $8::text, $9::numeric, $10::numeric, $11::numeric) RETURNING *`,
-        [
-          client.code,
-          client.description,
-          client.client_id,
-          client.email,
-          client.phone,
-          client.country,
-          client.city,
-          client.address,
-          client.credit_days,
-          client.credit_limit,
-          client.discount,
-        ],
-      );
-      return result.rows[0];
+      const result = await repository.clients.create({
+        data: { ...client }
+      })
+      return result
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -31,12 +17,13 @@ export class ClientsService {
       throw new Error("Error creating Client");
     }
   };
-  delete = async (id: number): Promise<void> => {
+  delete = async (id: string) => {
     try {
-      await this.repository.query(
-        `DELETE FROM public.clients WHERE id=$1::numeric`,
-        [id],
-      );
+      await repository.clients.delete({
+        where: {
+          id
+        }
+      })
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -44,12 +31,10 @@ export class ClientsService {
       throw new Error("Error deleting Client");
     }
   };
-  getAll = async (): Promise<Client[]> => {
+  getAll = async () => {
     try {
-      const result = await this.repository.query(
-        `SELECT * FROM public.clients`,
-      );
-      return result.rows;
+      const result = await repository.clients.findMany()
+      return result
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -57,16 +42,14 @@ export class ClientsService {
       throw new Error("Error getting Clients");
     }
   };
-  getOne = async (id: number): Promise<Client | null> => {
+  getOne = async (id: string) => {
     try {
-      const result = await this.repository.query(
-        `SELECT * FROM public.clients WHERE id = $1::numeric`,
-        [id],
-      );
-      if (result.rows.length <= 0) {
-        return null;
-      }
-      return result.rows[0];
+      const result = await repository.clients.findUnique({
+        where: {
+          id
+        }
+      })
+      return result
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -75,33 +58,24 @@ export class ClientsService {
     }
   };
   update = async (
-    id: number,
-    client: Partial<Omit<Client, "id">>,
-  ): Promise<Client> => {
+    id: string,
+    client: Partial<Omit<clients, "id">>,
+  ) => {
     try {
       const existingClient = await this.getOne(id);
       if (!existingClient) {
         throw new Error("Client not found");
       }
       const updatedClient = { ...existingClient, ...client };
-      const result = await this.repository.query(
-        `UPDATE public.clients SET code=$1::text, description=$2::text, client_id=$3::text, email=$4::text, phone=$5::text, country=$6::text, city=$7::text, address=$8::text, credit_days=$9::numeric, credit_limit=$10::numeric, discount=$11::numeric WHERE id=$12::numeric RETURNING *`,
-        [
-          updatedClient.code,
-          updatedClient.description,
-          updatedClient.client_id,
-          updatedClient.email,
-          updatedClient.phone,
-          updatedClient.country,
-          updatedClient.city,
-          updatedClient.address,
-          updatedClient.credit_days,
-          updatedClient.credit_limit,
-          updatedClient.discount,
-          id,
-        ],
-      );
-      return result.rows[0];
+      const result = await repository.clients.update({
+        data: {
+          ...updatedClient
+        },
+        where: {
+          id
+        }
+      })
+      return result
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);

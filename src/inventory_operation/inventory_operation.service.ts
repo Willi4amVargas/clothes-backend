@@ -1,10 +1,10 @@
-import { Pool } from "pg";
-
-import { InventoryOperation } from "@/inventory_operation/models/InventoryOperation";
+import { inventory_operation, module_types } from "#/client";
+import { repository } from "@/config/prisma";
 import { DateUtils } from "@/lib/date.utils";
+import { NumerationService } from "@/numeration/numeration.service";
 
 export class InventoryOperationService {
-  constructor(private repository: Pool) {}
+  constructor(private numerationService: NumerationService) {}
 
   calculateTotals = ({
     details,
@@ -40,28 +40,14 @@ export class InventoryOperationService {
     return result;
   };
   create = async (
-    inventoryOperation: Omit<InventoryOperation, "emission_date" | "id">,
-  ): Promise<InventoryOperation> => {
+    inventoryOperation: Omit<inventory_operation, "emission_date" | "id">,
+  ) => {
     try {
       const emissionDate = DateUtils.getDateFormated(new Date());
-      const result = await this.repository.query(
-        `
-        INSERT INTO inventory_operation (operation_type, document_no, emission_date, description, total, total_net, total_tax, user_id, total_details, total_amount)VALUES($1, $2::text, $3::date, $4::text, $5::numeric, $6::numeric, $7::numeric, $8::numeric, $9::numeric, $10::numeric) RETURNING *
-        `,
-        [
-          inventoryOperation.operation_type,
-          inventoryOperation.document_no,
-          emissionDate,
-          inventoryOperation.description,
-          inventoryOperation.total,
-          inventoryOperation.total_net,
-          inventoryOperation.total_tax,
-          inventoryOperation.user_id,
-          inventoryOperation.total_details,
-          inventoryOperation.total_amount,
-        ],
-      );
-      return result.rows[0];
+      const result = await repository.inventory_operation.create({
+        data: { ...inventoryOperation, emission_date: emissionDate },
+      });
+      return result;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -70,12 +56,13 @@ export class InventoryOperationService {
     }
   };
 
-  delete = async (id: number): Promise<void> => {
+  delete = async (id: string) => {
     try {
-      await this.repository.query(
-        "DELETE FROM inventory_operation WHERE id=$1::numeric",
-        [id],
-      );
+      await repository.inventory_operation.delete({
+        where: {
+          id,
+        },
+      });
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -83,54 +70,11 @@ export class InventoryOperationService {
       throw new Error("Error deleting InventoryOperation");
     }
   };
-  // this is not in use for now
-  // update = async (
-  //   correlative: number,
-  //   inventoryOperation: Partial<Omit<InventoryOperation, "correlative">>,
-  // ): Promise<InventoryOperation> => {
-  //   try {
-  //     const existingInventoryOperation = await this.getOne(correlative);
 
-  //     if (!existingInventoryOperation)
-  //       throw new Error("Inventory operation dont exist");
-
-  //     const updateInventoryOperation = {
-  //       ...existingInventoryOperation,
-  //       ...inventoryOperation,
-  //     };
-
-  //     const result = await this.repository.query(
-  //       "UPDATE inventory_operation SET operation_type=$1::text, document_no=$2::text, emission_date=$3::text, description=$4::text, total=$5::numeric,total_net=$6::numeric, total_tax=$7::numeric, user_code=$8::text, total_details=$9::numeric, total_amount=$10::numeric WHERE correlative=$11::numeric RETURNING *",
-  //       [
-  //         updateInventoryOperation.operation_type,
-  //         updateInventoryOperation.document_no,
-  //         updateInventoryOperation.emission_date,
-  //         updateInventoryOperation.description,
-  //         updateInventoryOperation.total,
-  //         updateInventoryOperation.total_net,
-  //         updateInventoryOperation.total_tax,
-  //         updateInventoryOperation.user_code,
-  //         updateInventoryOperation.total_details,
-  //         updateInventoryOperation.total_amount,
-  //         correlative,
-  //       ],
-  //     );
-
-  //     return result.rows[0];
-  //   } catch (error: any) {
-  //     if (error.message) {
-  //       throw new Error(error.message);
-  //     }
-  //     throw new Error("Error updating InventoryOperation");
-  //   }
-  // };
-
-  getAll = async (): Promise<InventoryOperation[]> => {
+  getAll = async () => {
     try {
-      const result = await this.repository.query(
-        "SELECT * FROM inventory_operation",
-      );
-      return result.rows;
+      const result = await repository.inventory_operation.findMany();
+      return result;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -139,19 +83,19 @@ export class InventoryOperationService {
     }
   };
 
-  // this can be in a table with all numeration
-  getDocumentNo = async (prefix?: string): Promise<string> => {
+  getDocumentNo = async (type: module_types) => {
     try {
-      const result = await this.repository.query(
-        "SELECT last_value + 1 as num FROM inventory_operation_id_seq",
+      const result = await this.numerationService.getByModuleAndType(
+        "INVENTORY_OPERATION",
+        type,
       );
 
-      const lastNumber = String(result.rows[0].num);
+      const lastNumber = String(result.last_numeration);
 
       const documentNo = lastNumber.padStart(8, "0");
 
-      if (prefix) {
-        return prefix + documentNo;
+      if (result.prefix !== "") {
+        return result.prefix + documentNo;
       }
       return documentNo;
     } catch (error: any) {
@@ -162,16 +106,12 @@ export class InventoryOperationService {
     }
   };
 
-  getOne = async (id: number): Promise<InventoryOperation | null> => {
+  getOne = async (id: string) => {
     try {
-      const result = await this.repository.query(
-        "SELECT *  FROM inventory_operation WHERE id = $1::numeric",
-        [id],
-      );
-      if (result.rows.length <= 0) {
-        return null;
-      }
-      return result.rows[0];
+      const result = await repository.inventory_operation.findFirst({
+        where: { id },
+      });
+      return result;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);

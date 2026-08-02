@@ -9,6 +9,7 @@ import { redisClient } from "@/redis/redis.client";
 import { StorageService } from "@/storage/storage.service";
 
 import { GetAllProductsParamsDto } from "./dto/get-all-products.dto";
+import { UUIDDto } from "@/lib/uuid.schema";
 
 export class ProductsController {
   private ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -66,7 +67,7 @@ export class ProductsController {
         ),
       );
       const result = { ...newProduct, stock: newStock, units: newUnits };
-      await redisClient.del(`cache:${req.originalUrl || req.url}`)
+      await redisClient.del(`cache:${req.originalUrl || req.url}`);
       res.status(201).json(result);
     } catch (error: any) {
       if (error.message) {
@@ -83,19 +84,16 @@ export class ProductsController {
       res.status(400).json({ message: "Invalid product code" });
       return;
     }
-    if (Number.isNaN(+id)) {
-      res.status(400).json({ message: "id is not a number" });
-      return;
+    const UUIDparse = UUIDDto.safeParse({ id });
+    if (!UUIDparse.success) {
+      return res.status(400).json({ message: UUIDparse.error.issues });
     }
 
-    if (+id <= 0) {
-      res.status(400).json({ message: "id can't be less or equal to 0" });
-      return;
-    }
+    const productUUID = UUIDparse.data.id;
 
     try {
       if (isDryRun) {
-        const existingProduct = await this.productsService.getOne(+id);
+        const existingProduct = await this.productsService.getOne(productUUID);
         if (!existingProduct) {
           return res.status(404).json({ message: "Product not found" });
         }
@@ -105,8 +103,8 @@ export class ProductsController {
             "Dry run enabled: delete validated and simulated without persisting changes",
         });
       }
-      await this.productsService.delete(+id);
-      await redisClient.del(`cache:${req.originalUrl || req.url}`)
+      await this.productsService.delete(productUUID);
+      await redisClient.del(`cache:${req.originalUrl || req.url}`);
       res.json({ message: "Product deleted successfully" });
     } catch (error: any) {
       if (error.message) {
@@ -124,17 +122,14 @@ export class ProductsController {
       return;
     }
 
-    if (Number.isNaN(+id)) {
-      res.status(400).json({ message: "id is not a number" });
-      return;
+    const UUIDparse = UUIDDto.safeParse({ id });
+    if (!UUIDparse.success) {
+      return res.status(400).json({ message: UUIDparse.error.issues });
     }
 
-    if (+id <= 0) {
-      res.status(400).json({ message: "id can't be less or equal to 0" });
-      return;
-    }
+    const productUUID = UUIDparse.data.id;
 
-    const existingProducts = await this.productsService.getOne(+id);
+    const existingProducts = await this.productsService.getOne(productUUID);
 
     if (!existingProducts) {
       res.status(400).json({ message: "Product dont exist" });
@@ -210,12 +205,12 @@ export class ProductsController {
   getMarks = async (_: Request, res: Response) => {
     try {
       const products = await this.productsService.getMarks();
-      res.json(products);
+      return res.json(products);
     } catch (error: any) {
       if (error.message) {
         return res.status(500).json({ message: error.message });
       }
-      res.status(500).json({ message: "Error fetching products" });
+      return res.status(500).json({ message: "Error fetching products" });
     }
   };
 
@@ -226,23 +221,20 @@ export class ProductsController {
       return;
     }
 
-    if (Number.isNaN(+id)) {
-      res.status(400).json({ message: "id is not a number" });
-      return;
+    const UUIDparse = UUIDDto.safeParse({ id });
+    if (!UUIDparse.success) {
+      return res.status(400).json({ message: UUIDparse.error.issues });
     }
 
-    if (+id <= 0) {
-      res.status(400).json({ message: "id can't be less or equal to 0" });
-      return;
-    }
+    const productUUID = UUIDparse.data.id;
 
     try {
-      const product = await this.productsService.getOne(+id);
+      const product = await this.productsService.getOne(productUUID);
       if (!product) {
         return res.status(404).json({ message: "Product not found" });
       }
-      const units = await this.productsUnitsService.getAll(+id);
-      const stock = await this.productsStockService.getAll(+id);
+      const units = await this.productsUnitsService.getAll(productUUID);
+      const stock = await this.productsStockService.getAll(productUUID);
 
       const result = {
         ...product,
@@ -267,15 +259,12 @@ export class ProductsController {
       return;
     }
 
-    if (Number.isNaN(+id)) {
-      res.status(400).json({ message: "id is not a number" });
-      return;
+    const UUIDparse = UUIDDto.safeParse({ id });
+    if (!UUIDparse.success) {
+      return res.status(400).json({ message: UUIDparse.error.issues });
     }
 
-    if (+id <= 0) {
-      res.status(400).json({ message: "id can't be less or equal to 0" });
-      return;
-    }
+    const productUUID = UUIDparse.data.id;
 
     const UpdateProductDtoParse = UpdateProductDto.safeParse(req.body);
 
@@ -288,7 +277,7 @@ export class ProductsController {
 
     try {
       if (isDryRun) {
-        const existingProduct = await this.productsService.getOne(+id);
+        const existingProduct = await this.productsService.getOne(productUUID);
         if (!existingProduct) {
           return res.status(404).json({ message: "Product not found" });
         }
@@ -302,7 +291,10 @@ export class ProductsController {
           products_units: simulatedProductUnits,
         });
       }
-      const updatedProduct = await this.productsService.update(+id, product);
+      const updatedProduct = await this.productsService.update(
+        productUUID,
+        product,
+      );
       let updatedProductUnits = null;
 
       if (product.products_units) {
@@ -313,7 +305,7 @@ export class ProductsController {
         );
       }
       const result = { ...updatedProduct, products_units: updatedProductUnits };
-      await redisClient.del(`cache:${req.originalUrl || req.url}`)
+      await redisClient.del(`cache:${req.originalUrl || req.url}`);
       res.status(201).json(result);
     } catch (error: any) {
       if (error.message) {
@@ -332,17 +324,14 @@ export class ProductsController {
       return;
     }
 
-    if (Number.isNaN(+id)) {
-      res.status(400).json({ message: "id is not a number" });
-      return;
+    const UUIDparse = UUIDDto.safeParse({ id });
+    if (!UUIDparse.success) {
+      return res.status(400).json({ message: UUIDparse.error.issues });
     }
 
-    if (+id <= 0) {
-      res.status(400).json({ message: "id can't be less or equal to 0" });
-      return;
-    }
+    const productUUID = UUIDparse.data.id;
 
-    const existingProducts = await this.productsService.getOne(+id);
+    const existingProducts = await this.productsService.getOne(productUUID);
 
     if (!existingProducts) {
       res.status(400).json({ message: "Product dont exist" });
@@ -374,7 +363,7 @@ export class ProductsController {
         await this.storageService.delete(existingProducts.image_url);
       }
       const finalFileName = await this.storageService.save(
-        existingProducts.id.toString(),
+        existingProducts.id,
         file,
       );
       await this.productsService.updateImageUrl(

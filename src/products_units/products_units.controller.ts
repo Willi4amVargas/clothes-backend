@@ -4,6 +4,7 @@ import { ProductsStockService } from "@/products_stock/products_stock.service";
 import { CreateProductUnitDto } from "@/products_units/dto/create-product-unit.dto";
 import { ProductsUnitsService } from "@/products_units/products_units.service";
 import { redisClient } from "@/redis/redis.client";
+import { UUIDDto } from "@/lib/uuid.schema";
 
 export class ProductsUnitsController {
   constructor(
@@ -19,15 +20,12 @@ export class ProductsUnitsController {
       return;
     }
 
-    if (Number.isNaN(+id)) {
-      res.status(400).json({ message: "id is not a number" });
-      return;
+    const UUIDparse = UUIDDto.safeParse({ id });
+    if (!UUIDparse.success) {
+      return res.status(400).json({ message: UUIDparse.error.issues });
     }
 
-    if (+id <= 0) {
-      res.status(400).json({ message: "id can't be less or equal to 0" });
-      return;
-    }
+    const productUUID = UUIDparse.data.id;
 
     const createProductUnitDtoParse = CreateProductUnitDto.safeParse(req.body);
     if (!createProductUnitDtoParse.success) {
@@ -42,18 +40,22 @@ export class ProductsUnitsController {
       if (isDryRun) {
         return res.status(201).json({
           id: 0,
-          product_id: +id,
+          product_id: productUUID,
           ...unit,
           dry_run: true,
           message:
             "Dry run enabled: request validated and simulated without persisting changes",
         });
       }
-      const newUnit = await this.productsUnitsService.create(+id, unit);
-      const newStock = await this.productsStockService.create(+id, newUnit.id, {
-        stock: 0,
-      });
-      await redisClient.del(`cache:/api/products/${id}`)
+      const newUnit = await this.productsUnitsService.create(productUUID, unit);
+      const newStock = await this.productsStockService.create(
+        productUUID,
+        newUnit.id,
+        {
+          stock: 0,
+        },
+      );
+      await redisClient.del(`cache:/api/products/${id}`);
       return res.status(201).json({ ...newUnit, stock: newStock });
     } catch (error: any) {
       if (error.message) {

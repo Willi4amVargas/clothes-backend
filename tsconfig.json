@@ -4,11 +4,12 @@
     "outDir": "./dist",
     "rootDir": "./",
     "paths": {
-      "@/*":["./src/*"]
+      "@/*":["./src/*"],
+      "#/*":["./generated/prisma/*"]
     },
     "types": ["jest"],
     "isolatedModules": true,
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "generated/**/*.ts"],
   "exclude": ["dist"]
 }

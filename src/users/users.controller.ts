@@ -15,13 +15,14 @@ import {
 } from "./dto/recovery-password.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UsersService } from "./users.service";
+import { UUIDDto } from "@/lib/uuid.schema";
 
 export class UserController {
   constructor(
     private usersRepository: UsersService,
     private mailService: MailService,
     private templateService: TemplateService,
-  ) {}
+  ) { }
   getUserBasicInfo = async (req: Request, res: Response) => {
     const { id } = req.params;
     if (!id || typeof id !== "string") {
@@ -29,17 +30,15 @@ export class UserController {
       return;
     }
 
-    if (Number.isNaN(+id)) {
-      res.status(400).json({ message: "id is not a number" });
+    const parseId = UUIDDto.safeParse({ id })
+
+    if (!parseId.success) {
+      res.status(400).json({ message: parseId.error.issues });
       return;
     }
+    const parseUUID = parseId.data.id
 
-    if (+id <= 0) {
-      res.status(400).json({ message: "id can't be less or equal to 0" });
-      return;
-    }
-
-    const user = await this.usersRepository.getBasicInfo(+id);
+    const user = await this.usersRepository.getBasicInfo(parseUUID);
 
     if (!user) {
       return res.status(404).json({ message: "User dont exist" });
@@ -49,8 +48,7 @@ export class UserController {
   };
 
   getUserInfo = (_: Request, res: Response) => {
-    const { password, ...updatedUserWithoutPassword } = res.locals.user;
-    return res.json(updatedUserWithoutPassword);
+    return res.json(res.locals.user);
   };
 
   recoveryPassword = async (req: Request, res: Response) => {
@@ -167,33 +165,33 @@ export class UserController {
   };
 
   update = async (req: Request, res: Response) => {
-    const loggedUser = this.usersRepository.getOnebyId(res.locals.user.id);
-
-    if (!loggedUser) {
-      return res.status(404).json({ message: "User logged not found" });
-    }
-
     const UpdateUserDtoParse = UpdateUserDto.safeParse(req.body);
 
     if (!UpdateUserDtoParse.success) {
       return res.status(400).json({ message: UpdateUserDtoParse.error.issues });
     }
 
+    const loggedUser = await this.usersRepository.getOnebyId(res.locals.user.id);
+
+    if (!loggedUser) {
+      return res.status(404).json({ message: "User logged not found" });
+    }
+
+    const { profile, ...cleanLoggedUser } = loggedUser;
+
     const userData = { ...UpdateUserDtoParse.data };
     if (userData.password) {
       userData.password = hashPassword(userData.password);
     }
 
-    const updateUser = { ...loggedUser, ...userData };
+    const updateUser = { ...cleanLoggedUser, ...userData };
 
     try {
       const updatedUser = await this.usersRepository.update(
         res.locals.user.id,
-        updateUser,
+        { ...updateUser },
       );
-      // eliminar la contraseña para el objeto final enviado
-      const { password, ...updatedUserWithoutPassword } = updatedUser;
-      return res.json(updatedUserWithoutPassword);
+      return res.json(updatedUser);
     } catch (error: any) {
       if (error.message) {
         return res.status(400).json({ message: error.message });

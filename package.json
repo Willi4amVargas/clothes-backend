@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "backend for clothes system",
   "scripts": {
-    "dev": "tsx --watch --env-file=.env ./src/server.ts",
+    "dev": "tsx --watch ./src/server.ts",
     "build": "rm -rf dist && node ./esbuild.config.mjs",
-    "start": "node --env-file=.env ./dist/index.js",
+    "start": "node ./dist/index.js",
     "test": "jest",
     "lint": "eslint"
   },
@@ -26,10 +26,12 @@
     "@types/supertest": "7.2.0",
     "@types/swagger-jsdoc": "6.0.4",
     "@types/swagger-ui-express": "4.1.8",
+    "dotenv": "^17.4.2",
     "esbuild": "0.28.0",
     "eslint": "10.1.0",
     "eslint-plugin-perfectionist": "5.7.0",
     "jest": "30.3.0",
+    "prisma": "^7.9.0",
     "supertest": "7.2.2",
     "swagger-jsdoc": "6.2.8",
     "ts-jest": "29.4.9",
@@ -39,6 +41,8 @@
     "typescript-eslint": "8.58.0"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.9.0",
+    "@prisma/client": "^7.9.0",
     "cors": "2.8.6",
     "express": "5.2.1",
     "express-rate-limit": "^8.5.2",

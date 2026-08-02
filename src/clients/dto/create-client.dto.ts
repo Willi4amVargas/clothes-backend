@@ -10,6 +10,6 @@ export const CreateClientDto = z.object({
   credit_limit: z.number().min(0),
   description: z.string().min(0),
   discount: z.number().min(0),
-  email: z.string(),
-  phone: z.string(),
+  email: z.email(),
+  phone: z.e164(),
 });

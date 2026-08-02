@@ -9,7 +9,7 @@ export const UpdateProductDto = z.object({
     .array(
       z.object({
         ...UpdateProductUnitDto.shape,
-        id: z.number().min(0),
+        id: z.uuidv4().min(0),
       }),
     )
     .optional(),

@@ -10,7 +10,7 @@ const preprocessIds = (val: any) => {
 };
 
 export const GetAllProductsParamsDto = z.object({
-  ids: z.preprocess(preprocessIds, z.array(z.coerce.number())).optional(),
+  ids: z.preprocess(preprocessIds, z.array(z.coerce.string())).optional(),
   stock: z.stringbool().default(false),
   units: z.stringbool().default(false),
 });

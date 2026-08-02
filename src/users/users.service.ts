@@ -1,44 +1,48 @@
 import { Pool } from "pg";
 
-import { User } from "@/users/models/User";
 import { hashPassword } from "@/lib/hash.utils";
+import { repository } from "@/config/prisma";
+import { users } from "#/client";
 
 export class UsersService {
-  constructor(private repository: Pool) { }
-
-  // this is not in use for now
-  // getAll = async (): Promise<User[]> => {
-  //   try {
-  //     const result = await this.repository.query("SELECT * FROM users");
-  //     return result.rows;
-  //   } catch (error) {
-  //     throw new Error("Error fetching users");
-  //   }
-  // };
+  constructor() { }
 
   getBasicInfo = async (
-    id: number
-  ): Promise<null | Omit<User, | "email" | "password" | "recovery_token" | "recovery_token_expires_at" | "status">> => {
-    const user = await this.repository.query(
-      "SELECT code, p.description as profile, u.description FROM public.users u INNER JOIN profile p ON p.id = u.profile where u.id = $1::numeric",
-      [id],
-    );
-    if (user.rows.length <= 0) {
+    id: string
+  ) => {
+    const user = await repository.users.findFirst({
+      select: {
+        id: true,
+        code: true,
+        description: true,
+        profile: true
+      },
+      where: {
+        id
+      },
+    })
+    if (!user) {
       return null;
     }
-    return user.rows[0];
+    return user
   };
 
-  getOne = async (code: string): Promise<null | User> => {
+  /** 
+  * Get one user by his code, return password
+  * @param {string} code - Code of the user must be search
+  * @return {Promise<null | users>} all users interface is returned
+  */
+  getOne = async (code: string) => {
     try {
-      const result = await this.repository.query(
-        "SELECT * FROM users WHERE code = $1::text",
-        [code],
-      );
-      if (result.rows.length <= 0) {
+      const result = await repository.users.findFirst({
+        where: {
+          code
+        }
+      })
+      if (!result) {
         return null;
       }
-      return result.rows[0];
+      return result
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
@@ -46,56 +50,67 @@ export class UsersService {
       throw new Error("Error fetching user");
     }
   };
-
-  getOnebyId = async (id: number): Promise<null | Omit<User, | "email" | "password" | "recovery_token" | "recovery_token_expires_at">> => {
+  /** 
+  * Get one user by his ID
+  * @param {string} id - Id of the user must be search
+  * @return {Promise<null | users>} User interface
+  */
+  getOnebyId = async (id: string) => {
     try {
-      const result = await this.repository.query(
-        "SELECT code, p.description as profile, u.description, u.status FROM public.users u INNER JOIN profile p ON p.id = u.profile where u.id = $1::numeric",
-        [id],
-      );
-      if (result.rows.length <= 0) {
+      const result = await repository.users.findUnique({
+        where: {
+          id
+        },
+        include: {
+          profile: true
+        }
+      })
+      if (!result) {
         return null;
       }
-      return result.rows[0];
+      return result
     } catch (error: any) {
       if (error.message) {
+        console.log(error.message)
         throw new Error(error.message);
       }
       throw new Error("Error fetching user");
     }
   };
 
-  setRecoveryCode = async (id: number, hashedCode: string, expiresAt: Date) => {
+  setRecoveryCode = async (id: string, hashedCode: string, expiresAt: Date) => {
     try {
-      await this.repository.query(
-        "UPDATE public.users SET recovery_token=$1::text, recovery_token_expires_at=$2::timestamp WHERE id=$3::numeric",
-        [hashedCode, expiresAt, id],
-      );
+      await repository.users.update({
+        data: {
+          recovery_token: hashedCode,
+          recovery_token_expires_at: expiresAt
+        },
+        where: {
+          id
+        }
+      })
     } catch (error: any) {
       throw new Error(error.message ?? "Error setting recovery code");
     }
   };
 
-  update = async (id: number, user: Partial<Omit<User, "id">>) => {
+  update = async (id: string, user: Partial<Omit<users, "id">>) => {
     try {
       const existingUser = await this.getOnebyId(id);
       if (!existingUser) {
         throw new Error("User not found");
       }
-      const updatedUser = { ...existingUser, ...user };
-      const result = await this.repository.query(
-        "UPDATE public.users SET profile=$1::numeric, code=$2::text, password=$3::text, description=$4::text, email=$5::text, status=$6::boolean WHERE id=$7::numeric RETURNING *",
-        [
-          updatedUser.profile,
-          updatedUser.code,
-          updatedUser.password,
-          updatedUser.description,
-          updatedUser.email,
-          updatedUser.status,
-          id,
-        ],
-      );
-      const { password, ...updatedUserReturn } = result.rows[0];
+      const { profile, ...allOtherData } = existingUser
+      const updatedUser = { ...allOtherData, ...user };
+      const result = await repository.users.update({
+        data: {
+          ...updatedUser
+        },
+        where: {
+          id
+        }
+      })
+      const { password, recovery_token, recovery_token_expires_at, ...updatedUserReturn } = result
       return updatedUserReturn;
     } catch (error: any) {
       if (error.message) {
@@ -105,37 +120,33 @@ export class UsersService {
     }
   };
 
-  updatePassword = async (id: number, hashedPassword: string) => {
+  updatePassword = async (id: string, hashedPassword: string) => {
     try {
-      await this.repository.query(
-        "UPDATE public.users SET password=$1::text, recovery_token=NULL, recovery_token_expires_at=NULL WHERE id=$2::numeric",
-        [hashedPassword, id],
-      );
+      await repository.users.update({
+        data: {
+          password: hashedPassword,
+          recovery_token: null,
+          recovery_token_expires_at: null
+        },
+        where: {
+          id
+        }
+      })
     } catch (error: any) {
       throw new Error(error.message ?? "Error updating password");
     }
   };
 
-  create = async (user: Omit<User, "id" | "recovery_token" | "recovery_token_expires_at" | "status">): Promise<Omit<User, "password">> => {
+  create = async (user: Omit<users, "id" | "recovery_token" | "recovery_token_expires_at" | "status">) => {
     try {
-      const codeExist = await this.getOne(user.code)
-      if (codeExist) {
-        throw new Error("User with this code already exist");
-      }
 
       const hasPassword = hashPassword(user.password)
 
-      const data = await this.repository.query("INSERT INTO public.users (profile, code, password, description, email, status) VALUES($1::numeric, $2::text, $3::text, $4::text, $5::text, true) RETURNING *",
-        [
-          user.profile,
-          user.code,
-          hasPassword,
-          user.description,
-          user.email
-        ]
-      )
+      const data = await repository.users.create({
+        data: { ...user, password: hasPassword }
+      })
 
-      const { password, ...userInfo } = data.rows[0]
+      const { password, ...userInfo } = data
 
       return userInfo
     } catch (error: any) {

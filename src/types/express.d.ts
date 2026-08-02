@@ -1,10 +1,10 @@
-import { User } from "@/users/models/User";
+import { users } from "#/client";
 
 declare global {
   namespace Express {
     interface Locals {
       dry_run: boolean;
-      user: User;
+      user: users;
     }
   }
 }
